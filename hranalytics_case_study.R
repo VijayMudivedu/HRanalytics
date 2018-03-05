@@ -46,21 +46,99 @@
 # read HR analytics files
 employee_survey_data <- read.csv("PA-I_Case_Study_HR_Analytics/employee_survey_data.csv")
 general_data <- read.csv("PA-I_Case_Study_HR_Analytics/general_data.csv")
-in_time_data <- read.csv("PA-I_Case_Study_HR_Analytics/in_time.csv",check.names = T)
+in_time_data <- read.csv("PA-I_Case_Study_HR_Analytics/in_time.csv",stringsAsFactors = F)
 manager_survey_data <- read.csv("PA-I_Case_Study_HR_Analytics/manager_survey_data.csv")
-out_time <- read.csv("PA-I_Case_Study_HR_Analytics/out_time.csv")
+out_time <- read.csv("PA-I_Case_Study_HR_Analytics/out_time.csv",stringsAsFactors = F,check.names = F)
 
-install.packages("xlsx")
+#install.packages("xlsx")
 data_dictionary <- xlsx::read.xlsx(file = "PA-I_Case_Study_HR_Analytics/data_dictionary.xlsx")
 
 hr_data_dictionary <- xlsx::read.xlsx(file = "PA-I_Case_Study_HR_Analytics/data_dictionary.xlsx",sheetName = "data_dictionary",as.data.frame = TRUE)
 View(hr_data_dictionary)
 
-summary(employee_survey_data)
-
 # DATA PREPARATION
 # checking for duplicates
+
+
+
+summary(employee_survey_data)
+
+# applying the str
+# checking the characterisitics of the data frame
+sapply(list(general_data,in_time_data,manager_survey_data,out_time,employee_survey_data),str)
+sapply(list(test_in,test_out),str)
+
 sum(duplicated(x = employee_survey_data$EmployeeID))
+
+# substracting in and outtimes of the employess of two dataframes.
+
+library(lubridate)
+
+# test date difference between mulitple columns
+test_in <- in_time_data[1:20,1:5]
+
+test_out <- out_time[1:20,1:5]
+str(test_in)
+str(test_out)
+
+#View(test_in)
+#?lubridate
+# converting the data to parse_date_time format
+x12 <- parse_date_time(test_in$`2015-01-05`, orders = "Y-m-d H:M:S",tz = "GMT")
+x13 <- parse_date_time(test_out$`2015-01-02`,orders = "Y-m-d H:M:S",tz = "GMT")
+x12
+x13
+
+#format(as.Date(test_in$`2015-01-02`[1:5],format = "%Y-%m-%d"),"%Y")
+
+#diff.Date(test_in$X2015.01.01)[1:5]
+difftime(time1 = x12,time2 = x13)
+#
+which(is.na(test_out))
+test_in[is.na(test_in)] <- "time_off"
+test_out[is.na(test_out)] <- "time_off"
+
+# difftime(time1 = parse_date_time(test_in[,-c(1,2)],orders = "Y-m-d H:M:S"),
+#         time2 = parse_date_time(test_out[,-c(1,2)],orders = "Y-m-d H:M:S"),tz = "GMT",units = c("auto"))
+#View(test_out
+
+test_time_in_time_out <- rbind(test_in,test_out)
+test_time_in_time_out[1:20,] - test_time_in_time_out[21:40,]
+
+
+
+#
+
+sum(names(in_time_data) == names(out_time))
+
+
+#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
