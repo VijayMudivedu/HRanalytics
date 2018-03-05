@@ -43,13 +43,30 @@
 # You are supposed to code entirely in R. All your plots and tables must be created in R, though you may recreate the same in Tableau as well (for the presentation) for better aesthetics. Please submit the presentation in a PDF format. Please make sure to rename your R script as "Group_Facilitator_RollNo_main.R".
 
 
+# read HR analytics files
+employee_survey_data <- read.csv("PA-I_Case_Study_HR_Analytics/employee_survey_data.csv")
+general_data <- read.csv("PA-I_Case_Study_HR_Analytics/general_data.csv")
+in_time_data <- read.csv("PA-I_Case_Study_HR_Analytics/in_time.csv",check.names = T)
+manager_survey_data <- read.csv("PA-I_Case_Study_HR_Analytics/manager_survey_data.csv")
+out_time <- read.csv("PA-I_Case_Study_HR_Analytics/out_time.csv")
+
+install.packages("xlsx")
+data_dictionary <- xlsx::read.xlsx(file = "PA-I_Case_Study_HR_Analytics/data_dictionary.xlsx")
+
+hr_data_dictionary <- xlsx::read.xlsx(file = "PA-I_Case_Study_HR_Analytics/data_dictionary.xlsx",sheetName = "data_dictionary",as.data.frame = TRUE)
+View(hr_data_dictionary)
+
+summary(employee_survey_data)
+
+# DATA PREPARATION
+# checking for duplicates
+sum(duplicated(x = employee_survey_data$EmployeeID))
 
 
 
 
 
-
-
+# EXPLORATORY DATA ANALYSIS
 
 
 
