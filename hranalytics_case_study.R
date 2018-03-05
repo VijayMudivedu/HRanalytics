@@ -93,6 +93,7 @@ x13
 
 #diff.Date(test_in$X2015.01.01)[1:5]
 difftime(time1 = x12,time2 = x13)
+
 #
 which(is.na(test_out))
 test_in[is.na(test_in)] <- "time_off"
@@ -102,14 +103,17 @@ test_out[is.na(test_out)] <- "time_off"
 #         time2 = parse_date_time(test_out[,-c(1,2)],orders = "Y-m-d H:M:S"),tz = "GMT",units = c("auto"))
 #View(test_out
 
+#
+# check if the headers of the data.frames are identifical.
+sum(names(in_time_data) == names(out_time))
+
+# there appears to be no change in the way the data looks.
+
+# binding the two datasets
 test_time_in_time_out <- rbind(test_in,test_out)
 test_time_in_time_out[1:20,] - test_time_in_time_out[21:40,]
 
-
-
-#
-
-sum(names(in_time_data) == names(out_time))
+?diff.difftime()
 
 
 #
