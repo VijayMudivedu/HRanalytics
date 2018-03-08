@@ -203,7 +203,7 @@ employee_master_cleaned <- employee_master
 # employee_master_cleaned <- data.frame(employee_master$Attrition,employee_master$NumCompaniesWorked,
 #                      employee_master$EnvironmentSatisfaction,employee_master$JobSatisfaction,
 #                      employee_master$WorkLifeBalance)
-View(employee_master_cleaned)
+#View(employee_master_cleaned)
 str(employee_master_cleaned)
 
 # Imputing the missing values as "missing" 
@@ -265,6 +265,28 @@ employee_master_cleaned <- employee_master_cleaned[-which(employee_master_cleane
 employee_master_cleaned <- employee_master_cleaned[-which(employee_master_cleaned$EnvironmentSatisfaction == "missing"),]
 employee_master_cleaned <- employee_master_cleaned[-which(employee_master_cleaned$JobSatisfaction == "missing"),]
 employee_master_cleaned <- employee_master_cleaned[-which(employee_master_cleaned$WorkLifeBalance == "missing"),]
+
+
+View(employee_master_cleaned)
+
+# calculating the data loss
+paste(100-(round(nrow(employee_master_cleaned)*100/nrow(employee_master),2)),"%")
+
+# Thus approximately 2.3% of data is lost as result of removing the "NAs"
+
+str(employee_master_cleaned)
+
+# changing factors to levels
+xBusinessTravel <-  employee_master_cleaned$BusinessTravel
+levels(xBusinessTravel) <- c(0,1,2)
+xBusinessTravel
+
+# "Non-Travel", "Travel_Frequently", "Travel_Rarely" are encoded as c(0,1,2)
+
+#levels(employee_master_cleaned$BusinessTravel) <- c(0,1,2)
+write.csv(employee_master_cleaned,"employee_master_cleaned.csv")
+
+
 
 
 
