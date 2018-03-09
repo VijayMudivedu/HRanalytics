@@ -44,6 +44,9 @@
 
 
 library(lubridate)
+library(MASS)
+library(tidyverse)
+library(stats)
 
 # READ ALL EXCEL FILES
 
@@ -60,7 +63,7 @@ out_time <- read.csv("PA-I_Case_Study_HR_Analytics/out_time.csv",stringsAsFactor
 data_dictionary <- readxl::read_xlsx(path = "PA-I_Case_Study_HR_Analytics/data_dictionary.xlsx")#(file = "PA-I_Case_Study_HR_Analytics/data_dictionary.xlsx")
 
 #hr_data_dictionary <- xlsx::read.xlsx(file = "PA-I_Case_Study_HR_Analytics/data_dictionary.xlsx",sheetName = "data_dictionary",as.data.frame = TRUE)
-View(data_dictionary)
+#View(data_dictionary)
 
 
 # ********************************************************
@@ -78,8 +81,9 @@ View(data_dictionary)
 # **********
 sum(duplicated(x = employee_survey_data$EmployeeID))
 
+# Thus it is observed that there are no duplicates
 # checking the characterisitics of the data frame
-sapply(list(general_data,in_time_data,manager_survey_data,out_time,employee_survey_data),str)
+sapply(list(general_data,in_time_data[1:5],manager_survey_data,out_time[1:5],employee_survey_data),str)
 
 # COMMENTS: THERE ARE NO DUPLCIATES
 
@@ -98,6 +102,7 @@ sum(names(in_time_data) == names(out_time))
 # renaming the blank field of in_time_date, out_time with EmployeedID of the
 names(in_time_data)[which(names(in_time_data) == "")] <- "EmployeeID"
 names(out_time)[which(names(out_time) == "")] <- "EmployeeID"
+
 
 
 # ********************************************************
@@ -126,13 +131,14 @@ in_out_dur <- in_out_dur[,-1]
 in_out_dur <- data.frame(in_out_dur)
 in_out_dur <- round(in_out_dur,2)
 
+
 # columns that have only zeros have a pattern. Finding with columns have the all columns as time_offs and 
-# removing the data frame that has all Statutory Holidays Remove
+# removing the data frame that has all Statutory Holidays
+# This can be indentified by identifying the ColSums of the data and equating with nrows.
 # data frame without statutory holidays
 in_out_data_without_stats <- in_out_dur[,-which(names(in_out_dur) %in% names(in_out_dur[which(colSums(in_out_dur == 0) == nrow(in_out_dur))]))]
 
 # write.csv(in_out_dur,"in_out_dur.csv")
-
 # difference between the number of columns betwen two dataframes
 ncol(in_out_dur) - ncol(in_out_data_without_stats)
 # Thus there are 12 Statutory Holidays
@@ -146,18 +152,15 @@ general_data$irregular_to_work <- rowSums((in_out_data_without_stats > 0) & (in_
 # employees with heavy work load working overtime
 general_data$heavy_workLoad <- rowSums(in_out_data_without_stats > 9)
 
-# # employees irregular to work/heavily worked and taking vacations
-# rowSums((in_out_data_without_stats > 8) & (in_out_data_without_stats == 0))
 
-# column means
-#sapply(x160, function(x) mean(x))
-colMeans(in_out_data_without_stats)
-str(in_out_data_without_stats)
+# # employees irregular to work/heavily worked and taking vacations.. This is not a useful metric, as the resigned date is not known...
+# apply(in_out_data_without_stats, MARGIN = 1, FUN = function(x) sum(x[1:ncol(in_out_data_without_stats)][(x > 9) & (x == 0)],na.rm = TRUE)) 
+#sum(rowSums((in_out_data_without_stats > 9) & (in_out_data_without_stats == 0)))
 
-# calculating the row means
-# row means
-rowMeans(in_out_data_without_stats)
-data.frame(ID = c(1:nrow(in_out_data_without_stats)), Row_means = rowMeans(in_out_data_without_stats))
+# conditional mean of Row items. 
+# average attendance without considering vacations
+# mean attendance without considering the vacations
+general_data$mean_attendance <-  apply(in_out_data_without_stats, MARGIN = 1, FUN = function(x) mean(x[1:ncol(in_out_data_without_stats)][x > 0],na.rm = TRUE))
 
 
 # checking if the EmployeeIDs in the general_data, manager_survey_data, Employee Survey data is unique
@@ -171,9 +174,8 @@ employee_survey_data <- merge(x = employee_survey_data,y = manager_survey_data,b
 
 # # check for NAs in the employee Survey Data
 
-# Removing unwanted fields , Employee Count, Over 18, StandardHours, 
+# Removing unwanted fields , EmployeeCount, Over 18, StandardHours which do not change
 general_data <- general_data[,-which(names(general_data) %in% c("Over18","StandardHours","EmployeeCount"))]
-
 
 # merge general_data and employee_survey_data dataframes
 employee_master <-  merge(x = general_data,y = employee_survey_data, by = intersect(names(general_data),names(employee_survey_data)))
@@ -194,7 +196,7 @@ write.csv(x = employee_master,file = "employee_master.csv")
 
 
 #----------------------$$$$$$$$$$$$$
-# Attempt to approximate the "NA"s in NumCompaniesWorked,EnvironmentSatisfaction,JobSatisfaction,WorkLifeBalance
+# Attempt to approximate the "NA"s in NumCompaniesWorked,EnvironmentSatisfaction,JobSatisfaction,WorkLifeBalance using the Weight of Evidence (WOE) and Information Values (IV) methods
 #----------------------$$$$$$$$$$$$$
 
 
@@ -212,10 +214,9 @@ employee_master_cleaned$NumCompaniesWorked[which(is.na(employee_master_cleaned$N
 employee_master_cleaned[which(is.na(employee_master_cleaned$EnvironmentSatisfaction)),"EnvironmentSatisfaction"] <- "missing"
 employee_master_cleaned[which(is.na(employee_master_cleaned$JobSatisfaction)),"JobSatisfaction"] <- "missing"
 employee_master_cleaned[which(is.na(employee_master_cleaned$WorkLifeBalance)),"WorkLifeBalance"] <- "missing"
+employee_master_cleaned[which(is.na(employee_master_cleaned$TotalWorkingYears)),"TotalWorkingYears"] <- "missing"
 
 # employee_master_cleaned$NumCompaniesWorked[which(is.na(employee_master_cleaned$NumCompaniesWorked))] <- "missing"
-
-
 
 # converting the attrition in 1 and 0
 employee_master_cleaned$Attrition <- ifelse(employee_master_cleaned$Attrition == "Yes",1,0)
@@ -225,13 +226,32 @@ employee_master_cleaned$NumCompaniesWorked <- factor(employee_master_cleaned$Num
 
 #install.packages("Information")
 library(Information)
-# creating the information values of the "employee_master_cleaned" data frame to see if the missing values can be imputed with the nearest numbers.
 
-IV_employee_master <- create_infotables(data = employee_master_cleaned[which(names(employee_master_cleaned) %in% c("Attrition","NumCompaniesWorked","EnvironmentSatisfaction","JobSatisfaction","WorkLifeBalance"))],
+# creating the information values of the "employee_master_cleaned" data frame to see if the missing values can be imputed with the nearest numbers.
+IV_employee_master <- create_infotables(data = employee_master_cleaned[which(names(employee_master_cleaned) %in% c("Attrition","NumCompaniesWorked","EnvironmentSatisfaction","JobSatisfaction","WorkLifeBalance","TotalWorkingYears"))],
                                         y = "Attrition", 
-                                        bins = 4,
+                                        bins = 6,
                                         parallel = TRUE)
+
 print(IV_employee_master)
+
+# Missing values of TotalworkingYears lie between and 2 and 3 years, closer to 3 years. Thus imputing the missing values with years and calculating the WOE and IV independently for TotalWorkingYears. 
+
+employee_master_cleaned$TotalWorkingYears[which(employee_master_cleaned$TotalWorkingYears == "missing")] <- 3
+str(employee_master_cleaned$TotalWorkingYears)
+
+# converting the character data to numeric data..
+employee_master_cleaned$TotalWorkingYears <- as.numeric(employee_master_cleaned$TotalWorkingYears)
+
+# creating WOE bins and checking the monontonic increase in the solution..
+IV_TotalWorkingYears <- create_infotables(data = employee_master_cleaned[which(names(employee_master_cleaned) %in% c("Attrition","TotalWorkingYears"))],
+                                          y = "Attrition", bins = 10,parallel = TRUE)
+
+print(IV_TotalWorkingYears)
+
+# COMMENTS: Thus for the data IV values - 0.42 is a strong predictor for the variable Total working years of experince.
+
+# For other variables, predictors range from intermediate to Weak IV Values......
 
 xNumCompnaiesWorked <- IV_employee_master$Tables["NumCompaniesWorked"]
 xNumCompnaiesWorked_df <- as.data.frame(xNumCompnaiesWorked)
@@ -255,43 +275,62 @@ ggplot(data.frame(IV_employee_master$Tables["JobSatisfaction"]),aes(x = JobSatis
 ggplot(data.frame(IV_employee_master$Tables["WorkLifeBalance"]),aes(x = WorkLifeBalance.WorkLifeBalance,y = WorkLifeBalance.IV)) + geom_point()
 
 
+# plotting the graph for Total Working Years
+ggplot(data.frame(IV_TotalWorkingYears$Tables["TotalWorkingYears"]),aes(x = reorder(factor(TotalWorkingYears.TotalWorkingYears)),y = TotalWorkingYears.IV)) + 
+  geom_point() + geom_line()
+
 
 # missing values aren't any closer to the nearest WOE. Thus it makes sense to remove the records for the below reasons:
-# 1. It is difficult to  emperically add missing values using Weights of Evidences of other variables
+# 1. It is difficult to  emperically add missing values using Weights of Evidences of these variables
 # 2. Adding mean and median values to the missing values of  "NumCompaniesWorked","EnvironmentSatisfaction","JobSatisfaction","WorkLifeBalance"  isn't logical as each of these variables are highly subjective each to each individual. 
 
-
+# delete the rows that are NAs and that attribute to not so significant predictors
 employee_master_cleaned <- employee_master_cleaned[-which(employee_master_cleaned$NumCompaniesWorked == "missing"),]
 employee_master_cleaned <- employee_master_cleaned[-which(employee_master_cleaned$EnvironmentSatisfaction == "missing"),]
 employee_master_cleaned <- employee_master_cleaned[-which(employee_master_cleaned$JobSatisfaction == "missing"),]
 employee_master_cleaned <- employee_master_cleaned[-which(employee_master_cleaned$WorkLifeBalance == "missing"),]
+#employee_master_cleaned <- employee_master_cleaned[-which(employee_master_cleaned$TotalWorkingYears == "missing"),]
+
 
 
 View(employee_master_cleaned)
 
 # calculating the data loss
-paste(100-(round(nrow(employee_master_cleaned)*100/nrow(employee_master),2)),"%")
+paste( 100 - (round(nrow(employee_master_cleaned)*100/nrow(employee_master),2)),"%")
 
-# Thus approximately 2.3% of data is lost as result of removing the "NAs"
+# COMMENTS: Thus approximately 2.3% of data is lost as result of removing the "NAs"
 
 str(employee_master_cleaned)
 
+# "Non-Travel", "Travel_Frequently", "Travel_Rarely" are encoded as c(0,1,2)
+
+# CONVERT THE 1 AND 0 IN THE ATTRITION TO YES/NO for data analysis
+employee_master_cleaned$Attrition <- ifelse(employee_master_cleaned$Attrition == 1, "Yes","No")
+
+#levels(employee_master_cleaned$BusinessTravel) <- c(0,1,2)
+write.csv(employee_master_cleaned,"employee_master_cleaned.csv")
+
+remove(IV,IV_employee_master.NumCompaniesWorked)
+
+
+# EXPLORATORY DATA ANALYSIS
+# checking for outliers Age, Salary, PercentHike, DistanceFromHome, 
+
+
+
+
+
+
+
+
+
+
+# MODEL BUILDING
 # changing factors to levels
 xBusinessTravel <-  employee_master_cleaned$BusinessTravel
 levels(xBusinessTravel) <- c(0,1,2)
 xBusinessTravel
 
-# "Non-Travel", "Travel_Frequently", "Travel_Rarely" are encoded as c(0,1,2)
-
-#levels(employee_master_cleaned$BusinessTravel) <- c(0,1,2)
-write.csv(employee_master_cleaned,"employee_master_cleaned.csv")
-
-
-
-
-
-
-# EXPLORATORY DATA ANALYSIS
 
 
 
@@ -307,12 +346,19 @@ write.csv(employee_master_cleaned,"employee_master_cleaned.csv")
 
 
 
+# ROUGH CODE USED IN DEVELOPMENT.
 
+# xRowMeans_all <- rowMeans(df)
+# View(data.frame(xRowMeans_apply,xRowMeans_all))
+# # column means
+# #sapply(x160, function(x) mean(x))
+# colMeans(in_out_data_without_stats)
+# str(in_out_data_without_stats)
 
-
-
-
-
+# calculating the row means
+# row means
+# rowMeans(in_out_data_without_stats)
+# data.frame(ID = c(1:nrow(in_out_data_without_stats)), Row_means = rowMeans(in_out_data_without_stats))
 
 
 
