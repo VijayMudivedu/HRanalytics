@@ -196,7 +196,7 @@ write.csv(x = employee_master,file = "employee_master.csv")
 
 
 #----------------------$$$$$$$$$$$$$
-# Attempt to approximate the "NA"s in NumCompaniesWorked,EnvironmentSatisfaction,JobSatisfaction,WorkLifeBalance using the Weight of Evidence (WOE) and Information Values (IV) methods
+# Attempting to approximate the "NA"s in NumCompaniesWorked,EnvironmentSatisfaction,JobSatisfaction,WorkLifeBalance using the Weight of Evidence (WOE) and Information Values (IV) methods
 #----------------------$$$$$$$$$$$$$
 
 
@@ -258,15 +258,16 @@ xNumCompnaiesWorked_df <- as.data.frame(xNumCompnaiesWorked)
 View(xNumCompnaiesWorked_df)
 str(xNumCompnaiesWorked_df)
 
+
+
 library(ggplot2)
 
 # plotting for number of companies worked
-ggplot(xNumCompnaiesWorked_df,aes(x = factor(NumCompaniesWorked.NumCompaniesWorked),y = NumCompaniesWorked.IV)) + 
-  geom_point() + geom_line()
+ggplot(xNumCompnaiesWorked_df,aes(x = NumCompaniesWorked.NumCompaniesWorked,y = NumCompaniesWorked.IV)) + 
+  geom_point() 
 
 # plotting the graph for environment Survey
-ggplot(data.frame(IV_employee_master$Tables["EnvironmentSatisfaction"]),aes(x = factor(EnvironmentSatisfaction.EnvironmentSatisfaction),y = EnvironmentSatisfaction.IV)) + 
-  geom_point() + geom_line()
+ggplot(data.frame(IV_employee_master$Tables["EnvironmentSatisfaction"]),aes(x = (EnvironmentSatisfaction.EnvironmentSatisfaction),y = EnvironmentSatisfaction.IV)) +  geom_point()
 
 # plots for "JobSatisfaction"
 ggplot(data.frame(IV_employee_master$Tables["JobSatisfaction"]),aes(x = JobSatisfaction.JobSatisfaction,y = JobSatisfaction.IV)) + geom_point()
@@ -276,8 +277,7 @@ ggplot(data.frame(IV_employee_master$Tables["WorkLifeBalance"]),aes(x = WorkLife
 
 
 # plotting the graph for Total Working Years
-ggplot(data.frame(IV_TotalWorkingYears$Tables["TotalWorkingYears"]),aes(x = reorder(factor(TotalWorkingYears.TotalWorkingYears)),y = TotalWorkingYears.IV)) + 
-  geom_point() + geom_line()
+ggplot(data.frame(IV_TotalWorkingYears$Tables["TotalWorkingYears"]),aes(x = reorder(factor(TotalWorkingYears.TotalWorkingYears)),y = TotalWorkingYears.IV)) + geom_point() 
 
 
 # missing values aren't any closer to the nearest WOE. Thus it makes sense to remove the records for the below reasons:
@@ -310,14 +310,180 @@ employee_master_cleaned$Attrition <- ifelse(employee_master_cleaned$Attrition ==
 #levels(employee_master_cleaned$BusinessTravel) <- c(0,1,2)
 write.csv(employee_master_cleaned,"employee_master_cleaned.csv")
 
-remove(IV,IV_employee_master.NumCompaniesWorked)
+#remove(IV,IV_employee_master.NumCompaniesWorked)
 
 
-# EXPLORATORY DATA ANALYSIS
+# outliers in the datasets
+
+df <- subset(employee_master_cleaned,select = c("MonthlyIncome","PercentSalaryHike","TotalWorkingYears",
+                                               "TrainingTimesLastYear","YearsAtCompany","YearsSinceLastPromotion",
+                                               "YearsWithCurrManager","Age","DistanceFromHome"))
+str(df)
+summary(factor(df$TotalWorkingYears))
+
+df$TotalWorkingYears <- as.integer(df$Tot)
+
+quantile(df$MonthlyIncome,seq(0,1,0.01))
+sapply(df, function(x) quantile(x,seq(0,1,0.01))) #%>% tail()
+
+# removing the records with outliers in: "TotalWorkingYears"  
+df_outliers_removed <- df[-which(df$TotalWorkingYears >= quantile(df$TotalWorkingYears,probs = 0.99)),] #tail()
+
+# checking the outliers again
+sapply(df_outliers_removed, function(x) quantile(x, seq(0,1,0.01))) %>% tail()
+
+
+# deleting the outlier in YearsAtCompany above 99%
+df_outliers_removed_YearsAtCompany <- df_outliers_removed[-which(df$YearsAtCompany >= quantile(df$YearsAtCompany, probs = 0.96)),]
+
+# checking the outliers
+sapply(df_outliers_removed_YearsAtCompany, function(x) quantile(x,seq(0,1,0.01))) %>% tail()
+
+library(reshape2)
+
+
+
+#########################################
+# OUTLIERS
+#########################################
+
+# printing the field in the dataframe employee_master_cleaned
+names(employee_master_cleaned)
+
+
+# [1] "EmployeeID"              "Age"                     "Attrition"               "BusinessTravel"          "Department"             
+# [6] "DistanceFromHome"        "Education"               "EducationField"          "Gender"                  "JobLevel"               
+# [11] "JobRole"                 "MaritalStatus"           "MonthlyIncome"           "NumCompaniesWorked"      "PercentSalaryHike"      
+# [16] "StockOptionLevel"        "TotalWorkingYears"       "TrainingTimesLastYear"   "YearsAtCompany"          "YearsSinceLastPromotion"
+# [21] "YearsWithCurrManager"    "EnvironmentSatisfaction" "JobSatisfaction"         "WorkLifeBalance"         "JobInvolvement"         
+# [26] "PerformanceRating"    
+
+melt(data = subset(employee_master_cleaned,select = c("Attrition","MonthlyIncome","PercentSalaryHike","TotalWorkingYears",
+                                                      "TrainingTimesLastYear","YearsAtCompany","YearsSinceLastPromotion",
+                                                      "YearsWithCurrManager","Age","DistanceFromHome")),id.vars = "Attrition") %>% 
+  ggplot(aes(x = variable, y = value, fill = Attrition)) + 
+  geom_boxplot() + 
+  facet_wrap(~variable, scales = "free")
+
+# plots after removing the outliers
+
+melt(data = data.frame(df_outliers_removed)) %>% 
+  ggplot(aes(x = variable, y = value)) + 
+  geom_boxplot() + 
+  facet_wrap(~variable, scales = "free")
+
+
+# plots after removing the outliers: df_outliers_removed_YearsAtCompany
+
+melt(data = data.frame(df_outliers_removed_YearsAtCompany)) %>% 
+  ggplot(aes(x = variable, y = value)) + 
+  geom_boxplot() + 
+  facet_wrap(~variable, scales = "free")
+
+
+
+
+#########################################
+#### EXPLORATORY DATA ANALYSIS
+#########################################
 # checking for outliers Age, Salary, PercentHike, DistanceFromHome, 
 
+names(employee_master_cleaned)
+
+#-------------------------------------
+# Univariate Analysis of "Attrition"  
+#-------------------------------------
+
+# Nominal Categories:
+# "BusinessTravel", "Department"    "JobRole" "MaritalStatus" "EducationField" "Gender"   
+
+library(reshape2)
+library(ggthemes)
+melt(data = subset(employee_master_cleaned,select = c("Attrition","BusinessTravel", 
+                                          "Department","JobRole", 
+                                          "MaritalStatus",
+                                          "EducationField", "Gender")),id.vars = "Attrition") %>% 
+  group_by(variable,value, Attrition) %>% 
+  summarise(value_count = n())  %>%
+  mutate( per_cnt = paste0(round(value_count*100/sum(value_count)),"%")) %>%
+  ggplot(aes(x = factor(value),y = value_count, fill = Attrition)) +
+    geom_col() + geom_text(aes(label = per_cnt),position = position_stack(vjust = 0.5),size = 2.5) +
+    facet_wrap(facets = ~variable,scales = "free",ncol = 3) +
+    theme(axis.text.x = element_text(angle = 90),
+          axis.ticks.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.title.x = element_blank(),
+          panel.background = element_blank()) + 
+  ylab(label = "Percentage of Attrition 'Yes' and 'No' by each category") +
+  scale_fill_manual(values = c("grey69","green4")) 
+ 
 
 
+# subset(employee_master_cleaned,select = c("Attrition","BusinessTravel", 
+#                                           "Department","JobRole", 
+#                                           "MaritalStatus",
+#                                           "EducationField","Gender","MonthlyIncome")) %>%
+#   group_by(BusinessTravel,Attrition) %>%
+#   summarise(Total = n()) %>%
+#   ggplot(aes(x = BusinessTravel,y = Total, fill = Attrition)) +
+#   geom_col() + 
+#   theme(axis.text.x = element_text(angle = 90))
+
+# View(airquality)
+# melt(airquality,id.vars = c("Month","Day"))[1:10,]
+
+
+
+# Ordinal Categories:
+# 
+#  
+# "DistanceFromHome", "Education", "Age","StockOptionLevel"
+# "JobLevel","NumCompaniesWorked","EnvironmentSatisfaction","JobSatisfaction","WorkLifeBalance"        
+# "JobInvolvement", "PerformanceRating"  
+
+# Plotting the ordinal categories
+melt(data = subset(employee_master_cleaned,select = c("Education", "StockOptionLevel",
+                                                      "JobLevel","NumCompaniesWorked","EnvironmentSatisfaction",
+                                                      "JobSatisfaction","WorkLifeBalance","JobInvolvement","PerformanceRating",
+                                                      "Attrition")),id.vars = "Attrition") %>% 
+  group_by(variable,value, Attrition) %>% 
+  summarise(value_count = n())  %>%
+  mutate( per_cnt = paste0(round(value_count*100/sum(value_count)),"%")) %>%
+  ggplot(aes(x = factor(value),y = value_count, fill = Attrition)) +
+  geom_col() + geom_text(aes(label = per_cnt),position = position_stack(vjust = 0.5),size = 2.5) +
+  facet_wrap(facets = ~variable,scales = "free",ncol = 3) +
+  theme(axis.ticks.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        panel.background = element_blank()) +
+  ylab(label = "") +
+  scale_fill_manual(values = c("grey69","hotpink4"))
+  
+
+# Plotting the Continuous variables DistanceFromHome and Age
+melt(data = subset(employee_master_cleaned,select = c("DistanceFromHome","Age","Attrition")),id.vars = "Attrition") %>% 
+  ggplot(aes(x = value, fill = Attrition)) +
+  geom_histogram(binwidth = 2, aes(y = ..density..)) + 
+  geom_density(aes(alpha = .001,col = Attrition)) +
+  facet_wrap(facets = ~variable,scales = "free",ncol = 2) +
+  scale_alpha_identity(guide = "none") +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        panel.background = element_blank()) +
+  scale_fill_manual(values = c("grey69","navy"))
+
+
+# Interval Variables:
+
+# [13] "MonthlyIncome" "PercentSalaryHike"
+# [17] "TotalWorkingYears" "TrainingTimesLastYear"   "YearsAtCompany" "YearsSinceLastPromotion"
+# [21] "YearsWithCurrManager"    
+
+subset(employee_master_cleaned,select = c("MonthlyIncome","PercentSalaryHike","TotalWorkingYears","TrainingTimesLastYear",
+                                                      "YearsAtCompany","YearsSinceLastPromotion","YearsWithCurrManager")) %>% head()
 
 
 
