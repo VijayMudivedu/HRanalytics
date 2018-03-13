@@ -47,9 +47,9 @@ library(lubridate)
 library(MASS)
 library(tidyverse)
 library(stats)
+library(caret)
 
 # READ ALL EXCEL FILES
-
 
 # read HR analytics files
 employee_survey_data <- read.csv("PA-I_Case_Study_HR_Analytics/employee_survey_data.csv")
@@ -71,7 +71,6 @@ data_dictionary <- readxl::read_xlsx(path = "PA-I_Case_Study_HR_Analytics/data_d
 # ********************************************************
 
 
-
 # ********************************************************
 # Data Preparation
 # ********************************************************
@@ -89,7 +88,7 @@ sapply(list(general_data,in_time_data[1:5],manager_survey_data,out_time[1:5],emp
 
 
 # **********
-# analysis of in_time_data and out_time dataframes
+# ANALYSIG of in_time_data and out_time dataframes
 # **********
 
 # GOAL OF THIS ANALYSIS IS TO FIND THE REGULARITY OF AN EMPLOYEE, VACATIONS TAKEN BY THE EMPLOYEE, Omit Statutory Holidays
@@ -102,7 +101,6 @@ sum(names(in_time_data) == names(out_time))
 # renaming the blank field of in_time_date, out_time with EmployeedID of the
 names(in_time_data)[which(names(in_time_data) == "")] <- "EmployeeID"
 names(out_time)[which(names(out_time) == "")] <- "EmployeeID"
-
 
 
 # ********************************************************
@@ -184,21 +182,20 @@ employee_master <-  merge(x = general_data,y = employee_survey_data, by = inters
 # identifying the columns that have NAs
 sapply(employee_master, function(x) sum(is.na(x)))
 
+# # writing csv of employe_master
+# write.csv(x = employee_master,file = "employee_master.csv")
+
 # Count of NAs in each columns
-# NumCompaniesWorked: 19        EnvironmentSatisfaction: 25         JobSatisfaction: 20         WorkLifeBalance: 38
+# NumCompaniesWorked: 19     TotalWorkingYears:9        EnvironmentSatisfaction: 25         JobSatisfaction: 20         WorkLifeBalance: 38
 
-# NumCompaniesWorked by an employee is subjective. It doesn't make sense to replace the NA's with median or mean as the NumOfCompanies a candidate. Thus delete the records of the employees that do not have enough data is one among the better solutions. 
-# EnvironmentSatisfaction: 
+# NumCompaniesWorked, TotalWorkingYears, EnvironmentSatisfaction, Jobsatisfaction, WorklifeBallance of an employee is subjective. It doesn't make sense to replace the NA's with median or mean of the respective variable. Thus deleting the records of the employees that do not have enough data is one among the better solutions. But before attempting to remove the recors, using the Weight of Evidence and Information Values, method of transformation of variables validate the claim, let 
 
-# writing csv of employe_master
-write.csv(x = employee_master,file = "employee_master.csv")
+#----------------------------------------------------------------------------------------
+# WOE and IV analysis of the missing NA values to validate the NA values. 
+#----------------------------------------------------------------------------------------
 
-
-
-#----------------------$$$$$$$$$$$$$
+##----------------------------------------------------------------------------------------
 # Attempting to approximate the "NA"s in NumCompaniesWorked,EnvironmentSatisfaction,JobSatisfaction,WorkLifeBalance using the Weight of Evidence (WOE) and Information Values (IV) methods
-#----------------------$$$$$$$$$$$$$
-
 
 employee_master_cleaned <- employee_master
 
@@ -259,7 +256,7 @@ View(xNumCompnaiesWorked_df)
 str(xNumCompnaiesWorked_df)
 
 
-
+# Plotting the variables with NAs and approximating the predictor analysis using GGPLOT. 
 library(ggplot2)
 
 # plotting for number of companies worked
@@ -312,75 +309,7 @@ write.csv(employee_master_cleaned,"employee_master_cleaned.csv")
 
 #remove(IV,IV_employee_master.NumCompaniesWorked)
 
-
-# outliers in the datasets
-
-df <- subset(employee_master_cleaned,select = c("MonthlyIncome","PercentSalaryHike","TotalWorkingYears",
-                                               "TrainingTimesLastYear","YearsAtCompany","YearsSinceLastPromotion",
-                                               "YearsWithCurrManager","Age","DistanceFromHome"))
-str(df)
-summary(factor(df$TotalWorkingYears))
-
-df$TotalWorkingYears <- as.integer(df$Tot)
-
-quantile(df$MonthlyIncome,seq(0,1,0.01))
-sapply(df, function(x) quantile(x,seq(0,1,0.01))) #%>% tail()
-
-# removing the records with outliers in: "TotalWorkingYears"  
-df_outliers_removed <- df[-which(df$TotalWorkingYears >= quantile(df$TotalWorkingYears,probs = 0.99)),] #tail()
-
-# checking the outliers again
-sapply(df_outliers_removed, function(x) quantile(x, seq(0,1,0.01))) %>% tail()
-
-
-# deleting the outlier in YearsAtCompany above 99%
-df_outliers_removed_YearsAtCompany <- df_outliers_removed[-which(df$YearsAtCompany >= quantile(df$YearsAtCompany, probs = 0.96)),]
-
-# checking the outliers
-sapply(df_outliers_removed_YearsAtCompany, function(x) quantile(x,seq(0,1,0.01))) %>% tail()
-
 library(reshape2)
-
-
-
-#########################################
-# OUTLIERS
-#########################################
-
-# printing the field in the dataframe employee_master_cleaned
-names(employee_master_cleaned)
-
-
-# [1] "EmployeeID"              "Age"                     "Attrition"               "BusinessTravel"          "Department"             
-# [6] "DistanceFromHome"        "Education"               "EducationField"          "Gender"                  "JobLevel"               
-# [11] "JobRole"                 "MaritalStatus"           "MonthlyIncome"           "NumCompaniesWorked"      "PercentSalaryHike"      
-# [16] "StockOptionLevel"        "TotalWorkingYears"       "TrainingTimesLastYear"   "YearsAtCompany"          "YearsSinceLastPromotion"
-# [21] "YearsWithCurrManager"    "EnvironmentSatisfaction" "JobSatisfaction"         "WorkLifeBalance"         "JobInvolvement"         
-# [26] "PerformanceRating"    
-
-melt(data = subset(employee_master_cleaned,select = c("Attrition","MonthlyIncome","PercentSalaryHike","TotalWorkingYears",
-                                                      "TrainingTimesLastYear","YearsAtCompany","YearsSinceLastPromotion",
-                                                      "YearsWithCurrManager","Age","DistanceFromHome")),id.vars = "Attrition") %>% 
-  ggplot(aes(x = variable, y = value, fill = Attrition)) + 
-  geom_boxplot() + 
-  facet_wrap(~variable, scales = "free")
-
-# plots after removing the outliers
-
-melt(data = data.frame(df_outliers_removed)) %>% 
-  ggplot(aes(x = variable, y = value)) + 
-  geom_boxplot() + 
-  facet_wrap(~variable, scales = "free")
-
-
-# plots after removing the outliers: df_outliers_removed_YearsAtCompany
-
-melt(data = data.frame(df_outliers_removed_YearsAtCompany)) %>% 
-  ggplot(aes(x = variable, y = value)) + 
-  geom_boxplot() + 
-  facet_wrap(~variable, scales = "free")
-
-
 
 
 #########################################
@@ -388,25 +317,142 @@ melt(data = data.frame(df_outliers_removed_YearsAtCompany)) %>%
 #########################################
 # checking for outliers Age, Salary, PercentHike, DistanceFromHome, 
 
+
+#########################################
+# PLOTTING BOXPLOTS TO IDENTIFY OUTLIERS
+#########################################
+
+#---------------------------------------------------
+# OUTLIERS IN THE DATASETS
+#---------------------------------------------------
+
+# CREATING A DATA FRAME TO CHECK OURLIERS IN THE DATA
+df <- subset(employee_master_cleaned,select = c("EmployeeID","MonthlyIncome","PercentSalaryHike","TotalWorkingYears",
+                                                "TrainingTimesLastYear","YearsAtCompany","YearsSinceLastPromotion",
+                                                "YearsWithCurrManager","Age","DistanceFromHome"))
+str(df)
+summary(factor(df$TotalWorkingYears))
+# CONVERTING THE Total working years as integers
+df$TotalWorkingYears <- as.integer(df$Tot)
+df$EmployeeID <- as.factor(df$EmployeeID)
+
+# MONTHLY INCOME: CHECKING OUTLIERS IN "MONTLYINCOME"
+quantile(df$MonthlyIncome,seq(0,1,0.01))
+summary(df$MonthlyIncome)
+
+# removing the outliers in the monthly income that lie above 90% percentile of monthly_income data. 
+df_mnth_incm <- df[-which(df$MonthlyIncome >= quantile(df$MonthlyIncome, 0.90)),]
+
+# checking the outliers across all the variables in the df dataset
+sapply(df_mnth_incm[,-1], function(x) quantile(x,seq(0,1,0.01))) %>% tail()
+
+# plotting the "monthly_income" variable to check the outliers, after removing the employee id
+melt(data = data.frame(df_mnth_incm[,-1])) %>% 
+  ggplot(aes(x = variable, y = value)) + 
+  geom_boxplot() + 
+  facet_wrap(~variable, scales = "free")
+
+# comparing the values of mean and median can
+summary(df$MonthlyIncome)
+summary(df_mnth_incm$MonthlyIncome)
+
+# YEARSATCOMPANY: measuring the outliers in "YearsAtCompany"
+sapply(df_mnth_incm[,-1], function(x) quantile(x, seq(0,1,0.01))) %>% tail()
+
+# quantile from 0 to 1 in steps of 1.
+quantile(df$YearsAtCompany,seq(0,1,0.01)) %>% tail()
+
+# identifying the outliers in the "YearsAtCompany" variable,
+df_mnth_incm$YearsAtCompany[which(df_mnth_incm$YearsAtCompany > quantile(df_mnth_incm$YearsAtCompany, 0.98))]
+
+df_YrsAtComp <-  df_mnth_incm[-which(df_mnth_incm$YearsAtCompany > quantile(df_mnth_incm$YearsAtCompany, 0.98)),]
+
+# checking the 
+sapply(df_YrsAtComp[,-1], function(x) quantile(x, seq(0,1,0.01))) %>% tail()
+
+# checking the summaries of monthly_income and YearsAtCompany, and original dataframe
+summary(df)
+summary(df_mnth_incm)
+summary(df_YrsAtComp)
+
+
+# TOTAL WORKING YEARS: removing the records with outliers in: "TotalWorkingYears" 
+quantile(df_YrsAtComp$TotalWorkingYears, seq(0,1, 0.01)) #%>% tail(n=10)
+
+# identifying the values of the records that display and rapid change in the variations
+df_YrsAtComp$TotalWorkingYears[which(df_YrsAtComp$TotalWorkingYears > quantile(df_YrsAtComp$TotalWorkingYears, 0.975))]
+
+# removing the outlier records from "TotalWorkingYears"
+df_TotalWorkingYears <- df_YrsAtComp[-which(df_YrsAtComp$TotalWorkingYears > quantile(df_YrsAtComp$TotalWorkingYears,probs = 0.975)),] #tail()
+
+# checking the outliers 
+sapply(df_TotalWorkingYears[,-1], function(x) quantile(x, seq(0,1,0.01))) %>% tail()
+
+# YearsAtCompany: Removing the outliers in YearsAtCompany
+
+# printing the field in the dataframe employee_master_cleaned
 names(employee_master_cleaned)
 
+
+# Plotting theoutliers in the "YearsAtCompany" and "TotalWokingYears"
+melt(data = subset(employee_master_cleaned,select = c("Attrition","MonthlyIncome","PercentSalaryHike","TotalWorkingYears",
+                                                      "TrainingTimesLastYear","YearsAtCompany","YearsSinceLastPromotion",
+                                                      "YearsWithCurrManager","Age","DistanceFromHome")),id.vars = "Attrition") %>% 
+  ggplot(aes(x = variable, y = value, fill = Attrition)) + 
+  geom_boxplot() + 
+  facet_wrap(~variable, scales = "free")
+
+# plots after removing the outliers from df_YersAtComp
+
+melt(data = data.frame(df_YrsAtComp[,-1])) %>% 
+  ggplot(aes(x = variable, y = value)) + 
+  geom_boxplot() + 
+  facet_wrap(~variable, scales = "free")
+
+
+# plots after removing the outliers: df_TotalWorkingYears
+
+melt(data = data.frame(df_TotalWorkingYears[,-1])) %>% 
+  ggplot(aes(x = variable, y = value)) + 
+  geom_boxplot() + 
+  facet_wrap(~variable, scales = "free")
+
+
+names(employee_master_cleaned)
+View(df_TotalWorkingYears)
+View(employee_master_cleaned)
+
+
+# identifying the position of the column indices of final Outlier treated dataframe "df_TotalWorkingYears" with "employe_master_cleaned"
+
+which(x = names(employee_master_cleaned) %in% names(df_TotalWorkingYears[,-1]))
+
+employee_master_cleaned_merged <- merge.data.frame(x = employee_master_cleaned[,-which(names(employee_master_cleaned) %in% names(df_TotalWorkingYears[,-1]))],
+      y = df_TotalWorkingYears,
+      by = "EmployeeID",
+      all.y = TRUE)
+
+
 #-------------------------------------
-# Univariate Analysis of "Attrition"  
+# UNIVARATE ANALYSIS
 #-------------------------------------
 
-# Nominal Categories:
-# "BusinessTravel", "Department"    "JobRole" "MaritalStatus" "EducationField" "Gender"   
+
+#---------------------------------------------------
+# PLOTS BY - Nominal Categories:
+#---------------------------------------------------
+# "BusinessTravel", "Department" "JobRole" "MaritalStatus" "EducationField" "Gender"   
 
 library(reshape2)
 library(ggthemes)
-melt(data = subset(employee_master_cleaned,select = c("Attrition","BusinessTravel", 
+melt(data = subset(employee_master_cleaned_merged,select = c("Attrition","BusinessTravel", 
                                           "Department","JobRole", 
                                           "MaritalStatus",
                                           "EducationField", "Gender")),id.vars = "Attrition") %>% 
   group_by(variable,value, Attrition) %>% 
   summarise(value_count = n())  %>%
   mutate( per_cnt = paste0(round(value_count*100/sum(value_count)),"%")) %>%
-  ggplot(aes(x = factor(value),y = value_count, fill = Attrition)) +
+  ggplot(aes(x = factor(reorder(value,-value_count)),y = value_count, fill = Attrition)) +
     geom_col() + geom_text(aes(label = per_cnt),position = position_stack(vjust = 0.5),size = 2.5) +
     facet_wrap(facets = ~variable,scales = "free",ncol = 3) +
     theme(axis.text.x = element_text(angle = 90),
@@ -418,32 +464,33 @@ melt(data = subset(employee_master_cleaned,select = c("Attrition","BusinessTrave
   ylab(label = "Percentage of Attrition 'Yes' and 'No' by each category") +
   scale_fill_manual(values = c("grey69","green4")) 
  
+# COMMENTS: BUSINESS TRAVEL-  TRAVEL_FREQUENTLY, TRAVEL_RARELY ; 
+# ** DEPARTMENT: HRD, R&D, Sales ; 
+# ** JOBROLE - Reserach Director, Research Scientist, Sales Rep and Sales Execs, Lab Technicians; 
+# ** MARITAL STATUS: Single and Married have highest Attrition; 
+# ** EDUCATION FIELD - Human Resources, Life sciences, Medical Professionals have  
+# Have strong correlation
 
-
-# subset(employee_master_cleaned,select = c("Attrition","BusinessTravel", 
-#                                           "Department","JobRole", 
+# subset(employee_master_cleaned_merged,select = c("Attrition","BusinessTravel",
+#                                           "Department","JobRole",
 #                                           "MaritalStatus",
 #                                           "EducationField","Gender","MonthlyIncome")) %>%
 #   group_by(BusinessTravel,Attrition) %>%
 #   summarise(Total = n()) %>%
 #   ggplot(aes(x = BusinessTravel,y = Total, fill = Attrition)) +
-#   geom_col() + 
+#   geom_col() +
 #   theme(axis.text.x = element_text(angle = 90))
 
-# View(airquality)
-# melt(airquality,id.vars = c("Month","Day"))[1:10,]
-
-
-
-# Ordinal Categories:
-# 
-#  
+#---------------------------------------------------
+# PLOTS BY - ORDINAL CATEGORIES
+#---------------------------------------------------
+ 
 # "DistanceFromHome", "Education", "Age","StockOptionLevel"
 # "JobLevel","NumCompaniesWorked","EnvironmentSatisfaction","JobSatisfaction","WorkLifeBalance"        
 # "JobInvolvement", "PerformanceRating"  
 
 # Plotting the ordinal categories
-melt(data = subset(employee_master_cleaned,select = c("Education", "StockOptionLevel",
+melt(data = subset(employee_master_cleaned_merged,select = c("Education", "StockOptionLevel",
                                                       "JobLevel","NumCompaniesWorked","EnvironmentSatisfaction",
                                                       "JobSatisfaction","WorkLifeBalance","JobInvolvement","PerformanceRating",
                                                       "Attrition")),id.vars = "Attrition") %>% 
@@ -461,9 +508,14 @@ melt(data = subset(employee_master_cleaned,select = c("Education", "StockOptionL
   ylab(label = "") +
   scale_fill_manual(values = c("grey69","hotpink4"))
   
+#COMMENTS: Performance Rating-1, Environment Satisifaction-1, JobSatisifaction -1, WorkLifeBalance 1-4, NumberCompaniesWorked-1, Education 1,2,3, StockOption Levels 0,1, JobLeve - 0,1 are strong indicators of JobChange
 
-# Plotting the Continuous variables DistanceFromHome and Age
-melt(data = subset(employee_master_cleaned,select = c("DistanceFromHome","Age","Attrition")),id.vars = "Attrition") %>% 
+
+#---------------------------------------------------
+# PLOTS BY - INTERVAL CONTINUOUS VARIABLES 
+#---------------------------------------------------
+
+melt(data = subset(employee_master_cleaned_merged,select = c("DistanceFromHome","Age","Attrition")),id.vars = "Attrition") %>% 
   ggplot(aes(x = value, fill = Attrition)) +
   geom_histogram(binwidth = 2, aes(y = ..density..)) + 
   geom_density(aes(alpha = .001,col = Attrition)) +
@@ -475,25 +527,87 @@ melt(data = subset(employee_master_cleaned,select = c("DistanceFromHome","Age","
         panel.background = element_blank()) +
   scale_fill_manual(values = c("grey69","navy"))
 
+#Comments: Distnace From 0-1 KM, Age: 30-35 are strong indicators of Attrition 
 
-# Interval Variables:
+
+#---------------------------------------------------
+# PLOTS FOR INTERVAL VARIABLES:
+#---------------------------------------------------
 
 # [13] "MonthlyIncome" "PercentSalaryHike"
 # [17] "TotalWorkingYears" "TrainingTimesLastYear"   "YearsAtCompany" "YearsSinceLastPromotion"
 # [21] "YearsWithCurrManager"    
 
-subset(employee_master_cleaned,select = c("MonthlyIncome","PercentSalaryHike","TotalWorkingYears","TrainingTimesLastYear",
+# subsetting the data that contain the continuous variables
+df_Interval_variables <- subset(employee_master_cleaned_merged,select = c("MonthlyIncome","PercentSalaryHike","TotalWorkingYears","TrainingTimesLastYear",
                                                       "YearsAtCompany","YearsSinceLastPromotion","YearsWithCurrManager")) %>% head()
 
 
+library(GGally)
+
+# creating the continuous variable plots using ggpairs
+ggpairs(df_Interval_variables) + theme(text = element_text(size = 9))
+
+# Comments:
+# There appears strong Positive correlation betwen the variables: 
+# a. YearsAtCompany and YearsWithCurrManager; YearsAtCompnay and YearsSinceLastPromotion)
+# b. Month Income and TrainingTimeLastYear. 
+# c. YearsAtCompany and TotalWorkingYears
+# d. YearSinceLastPromotion and TotalWorkingYears
+# e. YearsWithCurrManager and TotalWorkingYears
+# f. YearsWithCurrManager and TimeSinceLastPromotion.
+# Thus the variables "YearsSinceLastPromotion","TotalWOrkingYears","YearsAtCompany","MonthlyIncome" are strongly correlated. 
+
+
+# There is a Strong Negative Correlation between:
+# a. PercentSalaryHikee and Monthly Income. 
+# b. Monthly Income and Total WOrking years. 
+
+
+################################################################
+############# MODEL BUILDING
+################################################################
+
+#------------------------------------------------
+# DUMMY VARIABLES
+#------------------------------------------------
+
+
+View(employee_master_cleaned_merged)
+str(employee_master_cleaned_merged)
+
+# Copying the details of the cleaned and merged data frame without the EmployeeID column:
+
+employee_dummy_var_df <- employee_master_cleaned_merged[,-1]
+View(employee_dummy_var_df)
+str(employee_dummy_var_df)
+
+# ATTRITION to 1 and 0
+employee_dummy_var_df$Attrition <- ifelse(employee_master_cleaned_merged$Attrition == "Yes",1,0)
+
+# BUSINESS_TRAVEL: Converting factors of BUSINESS_TRAVEL values to integers
+# No_Travel = 0, Travel_rarely = 1, Travel_frequently = 2
+levels(x = employee_dummy_var_df$BusinessTravel) <- c(0,2,1)
+
+# DEPARTMENT: Converting factors in Department to numbers
+levels(x = employee_dummy_var_df$Department) <- c(0,1,2)
+
+# EDUCATION: Converting education to factors
+levels(x = employee_dummy_var_df$EducationField) <- list(HR_LS = c("Human Resources", "Life Sciences"),
+                                                         Mkt_Medi = c("Marketing","Medical"),
+                                                         Othr_TechDeg = c("Other","Technical Degree"))
+
+
+
+# creating sample test and training sample sets
 
 
 
 
 
-# MODEL BUILDING
+
 # changing factors to levels
-xBusinessTravel <-  employee_master_cleaned$BusinessTravel
+xBusinessTravel <-  employee_master_cleaned_merged$BusinessTravel
 levels(xBusinessTravel) <- c(0,1,2)
 xBusinessTravel
 
@@ -531,7 +645,7 @@ xBusinessTravel
 
 # install.packages("woe")
 # library(woe)
-# woe(Data = employee_master_cleaned,Independent = "employee_master.NumCompaniesWorked",Continuous = FALSE,Dependent = "employee_master.Attrition",C_Bin = 1,Good = 1,Bad = 0)
+# woe(Data = employee_master_cleaned_merged,Independent = "employee_master.NumCompaniesWorked",Continuous = FALSE,Dependent = "employee_master.Attrition",C_Bin = 1,Good = 1,Bad = 0)
 # 
 
 
