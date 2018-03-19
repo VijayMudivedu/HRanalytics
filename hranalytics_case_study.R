@@ -109,7 +109,7 @@ str(employee_survey_data)
 # check if the headers of the data.frames are identifical.
 sum(names(in_time_data) == names(out_time))
 
-# renaming the blank field of in_time_date, out_time with EmployeedID of the
+# renaming the blank field of in_time_date, out_time with EmployeedID - Assumption--
 names(in_time_data)[which(names(in_time_data) == "")] <- "EmployeeID"
 names(out_time)[which(names(out_time) == "")] <- "EmployeeID"
 
@@ -135,7 +135,6 @@ for (i in 1:ncol(in_time_data)) {
 
 # replacing the NAs with 0 being calcualted
 in_out_dur[is.na(in_out_dur)] <- 0
-
 
 # converting the in_out_dur to data.frame
 in_out_dur <- round(in_out_dur,2)
@@ -172,7 +171,9 @@ ncol(in_out_dur) - ncol(in_out_data_without_stats)
 # COMMENTS: Thus there are 12 Statutory Holidays
 
 # Vacations taken by each employee adding to the general_data
-vacations_taken_by_employee <- rowSums(in_out_dur == 0)
+vacations_taken_by_employee <- rowSums(in_out_data_without_stats == 0)
+# View(vacations_taken_by_employee)
+# max(vacations_taken_by_employee)
 
 general_data$vacations <- vacations_taken_by_employee
 
@@ -190,7 +191,7 @@ general_data$work_regularity <- cut(as.numeric(rowSums((in_out_data_without_stat
 # 1-"irregular",2-"chronic_irregular"
 
 # WORKLOAD CLASSIFICATION: employees with heavy work load working overtime
-#  0-"normal",
+# 0-"normal",
 # 1-"heavily_worked",
 # 2-"severe_workload"
 
@@ -198,6 +199,10 @@ general_data$workLoad <- cut(as.numeric(rowSums(in_out_data_without_stats > 9)),
                                    breaks = c(0,50,120,300), 
                                    labels = c(0,1,2),
                                    include.lowest = T)
+
+###########################################
+# calculate using the number of working hours excluding the vacations, stats, and weekends. 
+###########################################
 
 # rowSums((in_out_data_without_stats > 0) & (in_out_data_without_stats < 7)) & rowSums(in_out_data_without_stats > 9)
 
@@ -223,7 +228,8 @@ setdiff(x = in_time_data$EmployeeID, y = employee_survey_data$EmployeeID)
 
 
 # merge employee survey data and manager_survey_data
-employee_survey_data <- merge(x = employee_survey_data,y = manager_survey_data,by = intersect(names(employee_survey_data),names(manager_survey_data)))
+employee_survey_data <- merge(x = employee_survey_data,y = manager_survey_data,
+                              by = intersect(names(employee_survey_data),names(manager_survey_data)))
 
 # # check for NAs in the employee Survey Data
 
@@ -231,7 +237,8 @@ employee_survey_data <- merge(x = employee_survey_data,y = manager_survey_data,b
 general_data <- general_data[,-which(names(general_data) %in% c("Over18","StandardHours","EmployeeCount"))]
 
 # merge general_data and employee_survey_data dataframes
-employee_master <-  merge(x = general_data,y = employee_survey_data, by = intersect(names(general_data),names(employee_survey_data)))
+employee_master <-  merge(x = general_data,y = employee_survey_data, 
+                          by = intersect(names(general_data),names(employee_survey_data)))
 
 # identifying and Deleting the columns that have NAs 
 # identifying the columns that have NAs
@@ -335,7 +342,6 @@ ggplot(data.frame(IV_TotalWorkingYears$Tables["TotalWorkingYears"]),aes(x = Tota
 # reording the plot
 ggplot(data.frame(IV_TotalWorkingYears$Tables["TotalWorkingYears"]),aes(x = reorder(factor(TotalWorkingYears.TotalWorkingYears),TotalWorkingYears.IV),y = TotalWorkingYears.IV)) + geom_point() 
 
-
 # missing values aren't any closer to the nearest WOE. Thus it makes sense to remove the records for the below reasons:
 # 1. It is difficult to  emperically add missing values using Weights of Evidences of these variables
 # 2. Adding mean and median values to the missing values of  "NumCompaniesWorked","EnvironmentSatisfaction","JobSatisfaction","WorkLifeBalance"  isn't logical as each of these variables are subjective each to each individual. 
@@ -346,8 +352,6 @@ employee_master_cleaned <- employee_master_cleaned[-which(employee_master_cleane
 employee_master_cleaned <- employee_master_cleaned[-which(employee_master_cleaned$JobSatisfaction == "missing"),]
 employee_master_cleaned <- employee_master_cleaned[-which(employee_master_cleaned$WorkLifeBalance == "missing"),]
 #employee_master_cleaned <- employee_master_cleaned[-which(employee_master_cleaned$TotalWorkingYears == "missing"),]
-
-
 
 View(employee_master_cleaned)
 
@@ -362,14 +366,14 @@ str(employee_master_cleaned)
 names(employee_master_cleaned)
 
 # Convert the below columns to factors
-cols_factors <- c("EmployeeID","Attrition","BusinessTravel","Department","Education","EducationField","Gender","JobLevel","JobRole","MaritalStatus", "StockOptionLevel","TrainingTimesLastYear","JobInvolvement","PerformanceRating","EnvironmentSatisfaction","JobSatisfaction","WorkLifeBalance","work_regularity","workLoad")
+cols_factors <- c("EmployeeID","Attrition","BusinessTravel","Department","Education","EducationField","Gender","JobLevel","JobRole","MaritalStatus", "StockOptionLevel","JobInvolvement","PerformanceRating","EnvironmentSatisfaction","JobSatisfaction","WorkLifeBalance","work_regularity","workLoad")
 
 # converting integer columns to factors
 employee_master_cleaned[cols_factors] <- lapply(employee_master_cleaned[cols_factors], factor)
 
 #employee_master_cleaned$YearsSinceLastPromotion <- as.integer(employee_master_cleaned$YearsSinceLastPromotion)
  employee_master_cleaned$NumCompaniesWorked <- as.integer(employee_master_cleaned$NumCompaniesWorked)
- 
+ employee_master_cleaned$TrainingTimesLastYear <- as.integer(employee_master_cleaned$TrainingTimesLastYear)
  
 # Checking the employee_master_cleaned
 str(employee_master_cleaned)
@@ -398,8 +402,7 @@ names(employee_master_cleaned)
 str(employee_master_cleaned)
 
 # separating continuous variables for outlier treatment
-cont_vars <- c("EmployeeID","MonthlyIncome","Age","DistanceFromHome","PercentSalaryHike","TotalWorkingYears","YearsAtCompany","NumCompaniesWorked",
-                                                "YearsSinceLastPromotion","YearsWithCurrManager","vacations","mean_attendance")
+cont_vars <- c("EmployeeID","MonthlyIncome","Age","DistanceFromHome","PercentSalaryHike","TotalWorkingYears","YearsAtCompany","NumCompaniesWorked", "TrainingTimesLastYear","YearsSinceLastPromotion","YearsWithCurrManager","vacations","mean_attendance")
 
 employee_master_cleaned[cont_vars] %>% head()
 # Visualizing the outliers of continuous variables using boxplots
@@ -416,7 +419,7 @@ sapply(employee_master_cleaned[cont_vars][,-1], function(x) quantile(x,seq(0,1,0
 # checking the summary of outliers
 sapply(employee_master_cleaned[cont_vars][,-1], summary)
 
-# Keeping the data within the data of IQR of 1.58.
+# Keeping the data within the limit of IQR of 1.58.
 
 # MONTHLY INCOME OUTLIERS: Removing the outliers in the Monthly Income
 #checking outliers in MonthlyIncome
@@ -424,7 +427,8 @@ boxplot.stats(x = employee_master_cleaned[cont_vars]$MonthlyIncome,coef = 1.58)$
 
 # removing the outliers
 employee_master_cleaned <- employee_master_cleaned[!(employee_master_cleaned$MonthlyIncome %in% 
-                                                       boxplot.stats(x = employee_master_cleaned$MonthlyIncome,coef = 1.58)$out),]
+                                                       boxplot.stats(x = employee_master_cleaned$MonthlyIncome,coef = 1.58)$ou
+                                                     ),]
 
 # verifing the employee_master_after removing outliers 
 sapply(employee_master_cleaned[cont_vars][,-1],summary)
@@ -433,7 +437,7 @@ sapply(employee_master_cleaned[cont_vars][,-1],summary)
 boxplot.stats(x = employee_master_cleaned$Age,coef = 1.58)$out
 # No outliers found.
 
-# DistanceFromHome outrliers. 
+# DistanceFromHome outliers. 
 boxplot.stats(x = employee_master_cleaned$DistanceFromHome,coef = 1.58)$out
 # Appartently There are no outliers
 
@@ -460,22 +464,37 @@ table(employee_master_cleaned$YearsAtCompany,employee_master_cleaned$Attrition)
 employee_master_cleaned <- employee_master_cleaned[!(employee_master_cleaned$YearsAtCompany %in% 
                                                        boxplot.stats(x = employee_master_cleaned$YearsAtCompany,coef = 1.58)$out),]
 
+# COMMENT:
+
+
 # NumCompaniesWorked
 boxplot.stats(employee_master_cleaned$NumCompaniesWorked,coef = 1.58)$out
 # removing the outliers in the NumofCompaniesWorked
 employee_master_cleaned <- employee_master_cleaned[!(employee_master_cleaned$NumCompaniesWorked %in% 
                                                        boxplot.stats(x = employee_master_cleaned$NumCompaniesWorked,coef = 1.58)$out),]
-table(employee_master_cleaned$NumCompaniesWorked)
+table(employee_master_cleaned$NumCompaniesWorked,employee_master_cleaned$TotalWorkingYears)
 
-# YearsSinceLastPromotion outliers
-# Suspecting that this variable is highly likely to impact attrition, outliers aren't is being uptaken up for the below reason:
-table(boxplot.stats(df$YearsSinceLastPromotion,coef = 2)$out)
+# YearsSinceLastPromotion outliers 
+# Suspecting that this variable is highly likely impact attrition, outliers aren't is being uptaken up for the below reason:
+table(boxplot.stats(employee_master_cleaned$YearsSinceLastPromotion,coef = 3.58)$out)
 table(employee_master_cleaned$YearsSinceLastPromotion,employee_master_cleaned$Attrition)
 # employees with 15 years of experiences have 9/40 ~ 25% of attrition which is a considerable, hence ignoring the Outliers in YearsSinceLast Promotion
+employee_master_cleaned <- employee_master_cleaned[!(employee_master_cleaned$YearsSinceLastPromotion %in% 
+                                                       boxplot.stats(x = employee_master_cleaned$YearsSinceLastPromotion,coef = 3.58)$out),]
 
 # YearsWithCurrManager Outliers
 boxplot.stats(employee_master_cleaned$YearsWithCurrManager,coef = 1.58)$out
 # Thus eliminating the outliers for the employees working with the currentManager
+
+# # TrainingTimesLastYear outliers 
+# # Suspecting that this variable is highly likely impact attrition, outliers aren't is being uptaken up for the below reason:
+# table(boxplot.stats(employee_master_cleaned$TrainingTimesLastYear,coef = 1.58)$out)
+# table(employee_master_cleaned$TrainingTimesLastYear,employee_master_cleaned$Attrition)
+# # employees with 15 years of experiences have 9/40 ~ 25% of attrition which is a considerable, hence ignoring the Outliers in YearsSinceLast Promotion
+# employee_master_cleaned <- employee_master_cleaned[!(employee_master_cleaned$YearsSinceLastPromotion %in% 
+#                                                        boxplot.stats(x = employee_master_cleaned$YearsSinceLastPromotion,coef = 3.58)$out),]
+
+
 
 # summary before cleaning the outliers
 summary(employee_master[cont_vars][,-1])
@@ -568,6 +587,11 @@ melt(data = subset(employee_master_cleaned,select = c("Education", "StockOptionL
   ylab(label = "Percentage of Attrition 'Yes' and 'No' by each category") +
   scale_fill_manual(values = c("grey69","hotpink4"))
   
+#########################
+# 100% stack bar chart 
+#########################
+
+
 #COMMENTS: Performance Rating-4,3, JobInvovlment = 1,2, EnvironmentSatisifaction-1, JobSatisifaction -1, WorkLifeBalance 1-4, 
 # NumberCompaniesWorked-7 to 9, Education 2,3,4 StockOption Levels 0,1,2 JobLevel - 0,1 are strong indicators of Attrition
 # Additionally, Workload: Heavily Worked Individuals, and less work individuals are more likely to be on Attrition
@@ -591,6 +615,8 @@ melt(data = subset(employee_master_cleaned,select = c("DistanceFromHome","Age","
         panel.background = element_blank()) +
   scale_fill_manual(values = c("grey69","navy"))
 
+# NOTE: Change the attrtion attribute for Yes in the density plot.
+
 # COMMENTS: Folloing are some of the strong indicators of Attrition 
 # Distnace From 0-10 KM, 
 # Age: 25-35 
@@ -608,7 +634,7 @@ melt(data = subset(employee_master_cleaned,select = c("DistanceFromHome","Age","
 
 # subsetting the data that contain the continuous variables
 df_Ratio_variables <- subset(employee_master_cleaned,select = c("MonthlyIncome","PercentSalaryHike","TotalWorkingYears",
-                                                                   "YearsAtCompany","YearsSinceLastPromotion","YearsWithCurrManager"))
+                                                                   "YearsAtCompany","YearsSinceLastPromotion","YearsWithCurrManager","TrainingTimesLastYear"))
 
 
 library(GGally)
@@ -654,6 +680,7 @@ str(employee_dummy_var_df)
 # Method1: of creating dummy variables
 
 library(caret)
+# using the dummyVars function from the caret Library to convert the variables to dummy variables
 xDummy <- dummyVars(formula = ~ .,data = employee_master_cleaned[,-1],sep = ".", levelsOnly = FALSE, fullRank = TRUE)
 employee_dummy_var_df <- data.frame(predict(xDummy,employee_master_cleaned[,-1]))
 
@@ -680,31 +707,175 @@ test <- emp_master_final[-index,]
 #####################
 
 # creating the initial model
-hr_model_1 <- glm(formula = Attrition.Yes ~ .,family = "binomial",data = train)
+hr_model_01 <- glm(formula = Attrition.Yes ~ .,family = "binomial",data = train)
+
+# optimizing the hr_model_1 using StepAIC
+hr_model_02 <- stepAIC(hr_model_01,direction = "both")
+
+# Summarizing the hr_model_02 
+summary(hr_model_02)
+
+# checking the collinearility
+library(car)
+vif(hr_model_02)
+write.csv(vif(hr_model_02),"hr_vif.csv")
+
+# VIF of the variables is relatively low. Prioritizing the Z-Value over VIF
+# EducationField.Marketing	0.150025		EducationField.Marketing	2.249588148 are the variables that
+# qualify for removal
+
+hr_model_03 <-  glm(formula = Attrition.Yes ~ Age + BusinessTravel.Travel_Frequently + 
+    BusinessTravel.Travel_Rarely + Department.Research...Development + 
+    Department.Sales + Education.2 + EducationField.Life.Sciences + 
+    EducationField.Medical + JobLevel.2 + 
+    JobRole.Human.Resources + JobRole.Manager + JobRole.Manufacturing.Director + 
+    JobRole.Research.Director + JobRole.Sales.Representative + 
+    MaritalStatus.Single + MonthlyIncome + NumCompaniesWorked + 
+    StockOptionLevel.2 + TotalWorkingYears + TrainingTimesLastYear.1 + 
+    TrainingTimesLastYear.5 + TrainingTimesLastYear.6 + YearsAtCompany + 
+    YearsSinceLastPromotion + work_regularity.2 + mean_attendance + 
+    EnvironmentSatisfaction.2 + EnvironmentSatisfaction.3 + EnvironmentSatisfaction.4 + 
+    JobSatisfaction.2 + JobSatisfaction.3 + JobSatisfaction.4 + 
+    WorkLifeBalance.2 + WorkLifeBalance.3 + WorkLifeBalance.4 + 
+    JobInvolvement.3 + PerformanceRating.4, family = "binomial", 
+    data = train)
+
+
+summary(hr_model_03)
+# checking the collinearity of model_03
+vif(hr_model_03)
+write.csv(vif(hr_model_03),"hr_vif.csv")
+
+# VIF of variables have high significant p-values. Thus ignoring them
+# EducationField.Medical	p-value-0.24225	0.19253	1.258	0.208296	EducationField.Medical	1.883248794
+# eliminating EducationField.Medical
+
+hr_model_04 <-  glm(formula = Attrition.Yes ~ Age + BusinessTravel.Travel_Frequently + 
+    BusinessTravel.Travel_Rarely + Department.Research...Development + 
+    Department.Sales + Education.2 + EducationField.Life.Sciences + 
+    JobLevel.2 + 
+    JobRole.Human.Resources + JobRole.Manager + JobRole.Manufacturing.Director + 
+    JobRole.Research.Director + JobRole.Sales.Representative + 
+    MaritalStatus.Single + MonthlyIncome + NumCompaniesWorked + 
+    StockOptionLevel.2 + TotalWorkingYears + TrainingTimesLastYear.1 + 
+    TrainingTimesLastYear.5 + TrainingTimesLastYear.6 + YearsAtCompany + 
+    YearsSinceLastPromotion + work_regularity.2 + mean_attendance + 
+    EnvironmentSatisfaction.2 + EnvironmentSatisfaction.3 + EnvironmentSatisfaction.4 + 
+    JobSatisfaction.2 + JobSatisfaction.3 + JobSatisfaction.4 + 
+    WorkLifeBalance.2 + WorkLifeBalance.3 + WorkLifeBalance.4 + 
+    JobInvolvement.3 + PerformanceRating.4, family = "binomial", 
+    data = train)
+
+
+summary(hr_model_04)
+# checking the collinearity of model_03
+vif(hr_model_04)
+write.csv(vif(hr_model_04),"hr_vif.csv")
+
+
+# Eliminating TrainingTimesLastYear.5:	0.1146990	has very low significance.
+
+hr_model_05 <-  glm(formula = Attrition.Yes ~ Age + BusinessTravel.Travel_Frequently + 
+    BusinessTravel.Travel_Rarely + Department.Research...Development + 
+    Department.Sales + Education.2 + EducationField.Life.Sciences + 
+    JobLevel.2 + 
+    JobRole.Human.Resources + JobRole.Manager + JobRole.Manufacturing.Director + 
+    JobRole.Research.Director + JobRole.Sales.Representative + 
+    MaritalStatus.Single + MonthlyIncome + NumCompaniesWorked + 
+    StockOptionLevel.2 + TotalWorkingYears + TrainingTimesLastYear.1 + 
+    TrainingTimesLastYear.6 + YearsAtCompany + 
+    YearsSinceLastPromotion + work_regularity.2 + mean_attendance + 
+    EnvironmentSatisfaction.2 + EnvironmentSatisfaction.3 + EnvironmentSatisfaction.4 + 
+    JobSatisfaction.2 + JobSatisfaction.3 + JobSatisfaction.4 + 
+    WorkLifeBalance.2 + WorkLifeBalance.3 + WorkLifeBalance.4 + 
+    JobInvolvement.3 + PerformanceRating.4, family = "binomial", 
+    data = train)
+
+
+summary(hr_model_05)
+# checking the collinearity of model_03
+vif(hr_model_05)
+write.csv(vif(hr_model_05),"hr_vif.csv")
+
+# Eliminating the StockOptionLevel.2 p-level 0.1056200 that has low significance value
+
+hr_model_06 <-  glm(formula = Attrition.Yes ~ Age + BusinessTravel.Travel_Frequently + 
+    BusinessTravel.Travel_Rarely + Department.Research...Development + 
+    Department.Sales + Education.2 + EducationField.Life.Sciences + 
+    JobLevel.2 + 
+    JobRole.Human.Resources + JobRole.Manager + JobRole.Manufacturing.Director + 
+    JobRole.Research.Director + JobRole.Sales.Representative + 
+    MaritalStatus.Single + MonthlyIncome + NumCompaniesWorked + 
+    TotalWorkingYears + TrainingTimesLastYear.1 + 
+    TrainingTimesLastYear.6 + YearsAtCompany + 
+    YearsSinceLastPromotion + work_regularity.2 + mean_attendance + 
+    EnvironmentSatisfaction.2 + EnvironmentSatisfaction.3 + EnvironmentSatisfaction.4 + 
+    JobSatisfaction.2 + JobSatisfaction.3 + JobSatisfaction.4 + 
+    WorkLifeBalance.2 + WorkLifeBalance.3 + WorkLifeBalance.4 + 
+    JobInvolvement.3 + PerformanceRating.4, family = "binomial", 
+    data = train)
+
+
+summary(hr_model_06)
+# checking the collinearity of model_03
+vif(hr_model_06)
+write.csv(vif(hr_model_06),"hr_vif.csv")
+
+# Eliminating work_regularity .2	0.0399090	*	VIF work_regularity.2	1.949072134 that low value
+
+hr_model_07 <-  glm(formula = Attrition.Yes ~ Age + BusinessTravel.Travel_Frequently + 
+    BusinessTravel.Travel_Rarely + Department.Research...Development + 
+    Department.Sales + Education.2 + EducationField.Life.Sciences + 
+    JobLevel.2 + 
+    JobRole.Human.Resources + JobRole.Manager + JobRole.Manufacturing.Director + 
+    JobRole.Research.Director + JobRole.Sales.Representative + 
+    MaritalStatus.Single + MonthlyIncome + NumCompaniesWorked + 
+    TotalWorkingYears + TrainingTimesLastYear.1 + 
+    TrainingTimesLastYear.6 + YearsAtCompany + 
+    YearsSinceLastPromotion + mean_attendance + 
+    EnvironmentSatisfaction.2 + EnvironmentSatisfaction.3 + EnvironmentSatisfaction.4 + 
+    JobSatisfaction.2 + JobSatisfaction.3 + JobSatisfaction.4 + 
+    WorkLifeBalance.2 + WorkLifeBalance.3 + WorkLifeBalance.4 + 
+    JobInvolvement.3 + PerformanceRating.4, family = "binomial", 
+    data = train)
+
+
+summary(hr_model_07)
+# checking the collinearity of model_03
+vif(hr_model_07)
+write.csv(vif(hr_model_07),"hr_vif.csv")
+
+
+# Eliminating TrainingTimesLastYear.1	0.0375120	*	TrainingTimesLastYear.1	1.073645278
+
+
+hr_model_08 <-  glm(formula = Attrition.Yes ~ Age + BusinessTravel.Travel_Frequently + 
+    BusinessTravel.Travel_Rarely + Department.Research...Development + 
+    Department.Sales + Education.2 + EducationField.Life.Sciences + 
+    JobLevel.2 + 
+    JobRole.Human.Resources + JobRole.Manager + JobRole.Manufacturing.Director + 
+    JobRole.Research.Director + JobRole.Sales.Representative + 
+    MaritalStatus.Single + MonthlyIncome + NumCompaniesWorked + 
+    TotalWorkingYears + 
+    TrainingTimesLastYear.6 + YearsAtCompany + 
+    YearsSinceLastPromotion + mean_attendance + 
+    EnvironmentSatisfaction.2 + EnvironmentSatisfaction.3 + EnvironmentSatisfaction.4 + 
+    JobSatisfaction.2 + JobSatisfaction.3 + JobSatisfaction.4 + 
+    WorkLifeBalance.2 + WorkLifeBalance.3 + WorkLifeBalance.4 + 
+    JobInvolvement.3 + PerformanceRating.4, family = "binomial", 
+    data = train)
+
+
+summary(hr_model_08)
+# checking the collinearity of model_03
+vif(hr_model_08)
+write.csv(vif(hr_model_08),"hr_vif.csv")
 
 #
 
+#
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#
 
 
 
