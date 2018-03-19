@@ -48,8 +48,12 @@ library(MASS)
 library(tidyverse)
 library(stats)
 library(caret)
+library(e1071)
+library(reshape2)
+library(ggplot2)
 
 # READ ALL EXCEL FILES
+#  setwd("~/OneDrive/OneDrive - Atimi Software Inc/Upgrad/case study/HR Analytics CaseStudy/HRAnalytics Case Study")
 
 # read HR analytics files
 employee_survey_data <- read.csv("PA-I_Case_Study_HR_Analytics/employee_survey_data.csv",stringsAsFactors = TRUE)
@@ -84,11 +88,14 @@ sum(duplicated(x = employee_survey_data$EmployeeID))
 # Thus it is observed that there are no duplicates
 # checking the characterisitics of the data frame
 
-sapply(list(general_data,in_time_data[1:5],manager_survey_data,out_time[1:5],employee_survey_data),str)
+str(general_data)
+str(in_time_data)
+str(manager_survey_data)
+str(employee_survey_data)
+#sapply(list(general_data,in_time_data,manager_survey_data,out_time,employee_survey_data),str)
 
 # in_time and out_time Data.Frames has time in Chars
 # Employee ID to be converted to Factors.
-
 
 
 # *************************************************
@@ -119,10 +126,12 @@ sum(names(in_time_data) != names(out_time))
 in_out_dur <- matrix(data = 0,nrow = nrow(in_time_data), ncol = ncol(in_time_data))
 
 # creating the in_out_duration matrix that stores the calculated difference of the work timings
+# Sys.setlocale("LC_TIME", "C")
 for (i in 1:ncol(in_time_data)) {
-  in_out_dur[,i] <- difftime(time1 = parse_date_time(out_time[,i],orders = "Y-m-d H:M:S",tz = "GMT"),
-                           time2 = parse_date_time(in_time_data[,i],orders = "Y-m-d H:M:S",tz = "GMT"), units = "hours")
+  in_out_dur[,i] <- difftime(time1 = strptime(out_time[,i], format = "%Y-%m-%d %H:%M:%S"),
+                           time2 = strptime(in_time_data[,i],format = "%Y-%m-%d %H:%M:%S"), units = "hours")
 }
+
 
 # replacing the NAs with 0 being calcualted
 in_out_dur[is.na(in_out_dur)] <- 0
@@ -137,42 +146,68 @@ in_out_dur <- data.frame(in_out_dur[,-1])
 # copying the headers of data frames
 names(in_out_dur) <- c(names(in_time_data[,-1]))
 
+#--------------------------------------------------
+# OBJECTIVES OF STUDY OF in_out_dur data.frame
+#--------------------------------------------------
 # columns that have only zeros have a pattern. Finding with columns have the all columns as time_offs and 
 # removing the data frame that has all Statutory Holidays
 # This can be indentified by identifying the ColSums of the data and equating with nrows.
+
 # data frame without statutory holidays
-in_out_data_without_stats <- in_out_dur[,-which(names(in_out_dur) %in% names(in_out_dur[which(colSums(in_out_dur == 0) == nrow(in_out_dur))]))]
+# #--------------------------------------------------
+
+# column where the number of elements in a column is equal to the number of rows.
+all_zero_date_columns <- which(colSums(in_out_dur == 0) == nrow(in_out_dur))
+
+# names of the columns that have zeros
+names_of_columns_with_all_zeros <- names(in_out_dur[all_zero_date_columns])
+
+
+in_out_data_without_stats <- in_out_dur[,-which(names(in_out_dur) %in% names_of_columns_with_all_zeros)]
 
 # write.csv(in_out_dur,"in_out_dur.csv")
 # difference between the number of columns betwen two dataframes
 ncol(in_out_dur) - ncol(in_out_data_without_stats)
-# Thus there are 12 Statutory Holidays
 
-# getting the count of Vacations taken by each employee adding to the general_data
-general_data$vacations <- rowSums(in_out_dur == 0)
+# COMMENTS: Thus there are 12 Statutory Holidays
+
+# Vacations taken by each employee adding to the general_data
+vacations_taken_by_employee <- rowSums(in_out_dur == 0)
+
+general_data$vacations <- vacations_taken_by_employee
 
 # employees who are regular, irregular, chronic_irregular
+# Categories defined below: 
+# 0-"regular",
+# 1-"irregular",
+# 2-"chronic_irregular"
+
 general_data$work_regularity <- cut(as.numeric(rowSums((in_out_data_without_stats > 0) & (in_out_data_without_stats < 7))), 
                                       breaks = c(0,50,150,300), 
                                       labels = c(0,1,2),
                                       include.lowest = T)
-# Categories defined below: 0-"regular",1-"irregular",2-"chronic_irregular"
+# Categories defined below: 0-"regular",
+# 1-"irregular",2-"chronic_irregular"
 
-# employees with heavy work load working overtime
+# WORKLOAD CLASSIFICATION: employees with heavy work load working overtime
+#  0-"normal",
+# 1-"heavily_worked",
+# 2-"severe_workload"
+
 general_data$workLoad <- cut(as.numeric(rowSums(in_out_data_without_stats > 9)), 
                                    breaks = c(0,50,120,300), 
                                    labels = c(0,1,2),
-                                   include.lowest=T)
-# 0-"normal",1-"heavily_worked",2-"severe_workload"
+                                   include.lowest = T)
 
 # rowSums((in_out_data_without_stats > 0) & (in_out_data_without_stats < 7)) & rowSums(in_out_data_without_stats > 9)
 
-# # employees irregular to work/heavily worked and taking vacations.. This is not a useful metric, as the resigned date is not known...
+# employees irregular to work/heavily worked and taking vacations.. This is not a useful metric, as the resigned date is not known... SO COMMENTING THE BELOW CODE
 # apply(in_out_data_without_stats, MARGIN = 1, FUN = function(x) sum(x[1:ncol(in_out_data_without_stats)][(x > 9) & (x == 0)],na.rm = TRUE)) 
-#sum(rowSums((in_out_data_without_stats > 9) & (in_out_data_without_stats == 0)))
+# sum(rowSums((in_out_data_without_stats > 9) & (in_out_data_without_stats == 0)))
 
 # conditional mean of Row items. 
 # average attendance without considering vacations
+
 # mean attendance without considering the vacations
 general_data$mean_attendance <-  apply(in_out_data_without_stats, MARGIN = 1, 
                                        FUN = function(x) mean(x[1:ncol(in_out_data_without_stats)][x > 0],na.rm = TRUE))
@@ -295,7 +330,10 @@ ggplot(data.frame(IV_employee_master$Tables["WorkLifeBalance"]),aes(x = WorkLife
 
 
 # plotting the graph for Total Working Years
-ggplot(data.frame(IV_TotalWorkingYears$Tables["TotalWorkingYears"]),aes(x = reorder(factor(TotalWorkingYears.TotalWorkingYears)),y = TotalWorkingYears.IV)) + geom_point() 
+ggplot(data.frame(IV_TotalWorkingYears$Tables["TotalWorkingYears"]),aes(x = TotalWorkingYears.TotalWorkingYears,y = TotalWorkingYears.IV)) + geom_point() 
+
+# reording the plot
+ggplot(data.frame(IV_TotalWorkingYears$Tables["TotalWorkingYears"]),aes(x = reorder(factor(TotalWorkingYears.TotalWorkingYears),TotalWorkingYears.IV),y = TotalWorkingYears.IV)) + geom_point() 
 
 
 # missing values aren't any closer to the nearest WOE. Thus it makes sense to remove the records for the below reasons:
@@ -339,7 +377,9 @@ str(employee_master_cleaned)
 #levels(employee_master_cleaned$BusinessTravel) <- c(0,1,2)
 write.csv(employee_master_cleaned,"employee_master_cleaned.csv")
 
-remove(IV_TotalWorkingYears)
+temp_employee_df_missing <- employee_master_cleaned
+
+#remove(IV_TotalWorkingYears)
 
 library(reshape2)
 
@@ -353,69 +393,118 @@ library(reshape2)
 #---------------------------------------------------
 # OUTLIERS IN THE DATASETS
 #---------------------------------------------------
-
+str(employee_master)
 names(employee_master_cleaned)
 str(employee_master_cleaned)
 
-# CREATING A DATA FRAME TO CHECK OURLIERS IN THE DATA
-df <- subset(employee_master_cleaned,select = c("MonthlyIncome","PercentSalaryHike","TotalWorkingYears","YearsAtCompany","NumCompaniesWorked",
-                                                "Age","DistanceFromHome","vacations","mean_attendance"))
-str(df)
+# separating continuous variables for outlier treatment
+cont_vars <- c("EmployeeID","MonthlyIncome","Age","DistanceFromHome","PercentSalaryHike","TotalWorkingYears","YearsAtCompany","NumCompaniesWorked",
+                                                "YearsSinceLastPromotion","YearsWithCurrManager","vacations","mean_attendance")
 
+employee_master_cleaned[cont_vars] %>% head()
+# Visualizing the outliers of continuous variables using boxplots
 
-# checking the outliers across all the variables in the df dataset
-sapply(df, function(x) quantile(x,seq(0,1,0.01))) 
-
-# checking the summary of outliers
-sapply(df, summary)
-
-# impact of removing the outerliers 95%
-
-# summary(factor(df$TotalWorkingYears))
-# CONVERTING THE Total working years as integers
-#df$TotalWorkingYears <- as.integer(df$TotalWorkingYears)
-
-# df$EmployeeID <- as.factor(df$EmployeeID)
-summary(df)
-
-# MONTHLY INCOME: CHECKING OUTLIERS IN "MONTLYINCOME"
-quantile(df$MonthlyIncome,seq(0,1,0.01)) %>% tail()
-summary(df$MonthlyIncome)
-
-# Impact of removing the outliers in the monthly income that lie above 99% percentile of monthly_income data and checking the values. 
-summary(df[-which(df$MonthlyIncome >= quantile(df$MonthlyIncome, 0.95)),])
-# COMMENTS: no significant change in the mean value
-
-
-# Impact of removing Outliers in "YearsAtCompany"
-quantile(df$YearsAtCompany,seq(0,1,0.01)) %>% tail()
-summary(df[-which(df$YearsAtCompany >= quantile(df$YearsAtCompany, 0.95)),])
-# Comment: small change in the mean value
-
-# Impact of "TotalWorkingYears"
-quantile(df$TotalWorkingYears,seq(0,1,0.01)) %>% tail()
-summary(df[-which(df$TotalWorkingYears >= quantile(df$TotalWorkingYears, 0.95)),])
-# Comments: Small change in the mean values
-
-# boxplots of continuous variables
-
-melt(data = data.frame(df)) %>%
+melt(data = employee_master_cleaned[cont_vars],id.vars = "EmployeeID") %>% 
   ggplot(aes(x = variable, y = value)) +
   geom_boxplot() +
   facet_wrap(~variable, scales = "free")
 
 
-#COMMENTS: Thus, removing the outliers hasn't signficiantly impacted the mean median values and current variable. Further, this is also affecting the other variables.. 
+# checking the outliers across all the variables in the df dataset
+sapply(employee_master_cleaned[cont_vars][,-1], function(x) quantile(x,seq(0,1,0.02))) 
+
+# checking the summary of outliers
+sapply(employee_master_cleaned[cont_vars][,-1], summary)
+
+# Keeping the data within the data of IQR of 1.58.
+
+# MONTHLY INCOME OUTLIERS: Removing the outliers in the Monthly Income
+#checking outliers in MonthlyIncome
+boxplot.stats(x = employee_master_cleaned[cont_vars]$MonthlyIncome,coef = 1.58)$out
+
+# removing the outliers
+employee_master_cleaned <- employee_master_cleaned[!(employee_master_cleaned$MonthlyIncome %in% 
+                                                       boxplot.stats(x = employee_master_cleaned$MonthlyIncome,coef = 1.58)$out),]
+
+# verifing the employee_master_after removing outliers 
+sapply(employee_master_cleaned[cont_vars][,-1],summary)
+
+# AGE outliers: removing outliers in age
+boxplot.stats(x = employee_master_cleaned$Age,coef = 1.58)$out
+# No outliers found.
+
+# DistanceFromHome outrliers. 
+boxplot.stats(x = employee_master_cleaned$DistanceFromHome,coef = 1.58)$out
+# Appartently There are no outliers
+
+# PercentSalaryHike Outliers
+boxplot.stats(x = employee_master_cleaned$PercentSalaryHike,coef = 1.58)$out
+# No Outliers found
+
+# TotalWorkingYears Outliers
+boxplot.stats(x = employee_master_cleaned[cont_vars]$TotalWorkingYears,coef = 1.58)$out
+# outliers found from TotalWorkingYears are removed
+employee_master_cleaned <- employee_master_cleaned[!(employee_master_cleaned$TotalWorkingYears %in% 
+                                                       boxplot.stats(x = employee_master_cleaned$TotalWorkingYears,coef = 1.58)$out),]
+# verifying the dataframe after removing the outliers
+sapply(employee_master_cleaned[cont_vars][,-1],summary)
+
+
+# YearsAtCompany Outliers
+boxplot.stats(employee_master_cleaned[cont_vars]$YearsAtCompany,coef = 1.58)$out
+#  count of outliers being removed
+table(boxplot.stats(employee_master_cleaned[cont_vars]$YearsAtCompany,coef = 1.58)$out)
+#  count of "YearsAtCompany and Attrition
+table(employee_master_cleaned$YearsAtCompany,employee_master_cleaned$Attrition)
+# removing the outliers found YearsAtCompnay
+employee_master_cleaned <- employee_master_cleaned[!(employee_master_cleaned$YearsAtCompany %in% 
+                                                       boxplot.stats(x = employee_master_cleaned$YearsAtCompany,coef = 1.58)$out),]
+
+# NumCompaniesWorked
+boxplot.stats(employee_master_cleaned$NumCompaniesWorked,coef = 1.58)$out
+# removing the outliers in the NumofCompaniesWorked
+employee_master_cleaned <- employee_master_cleaned[!(employee_master_cleaned$NumCompaniesWorked %in% 
+                                                       boxplot.stats(x = employee_master_cleaned$NumCompaniesWorked,coef = 1.58)$out),]
+table(employee_master_cleaned$NumCompaniesWorked)
+
+# YearsSinceLastPromotion outliers
+# Suspecting that this variable is highly likely to impact attrition, outliers aren't is being uptaken up for the below reason:
+table(boxplot.stats(df$YearsSinceLastPromotion,coef = 2)$out)
+table(employee_master_cleaned$YearsSinceLastPromotion,employee_master_cleaned$Attrition)
+# employees with 15 years of experiences have 9/40 ~ 25% of attrition which is a considerable, hence ignoring the Outliers in YearsSinceLast Promotion
+
+# YearsWithCurrManager Outliers
+boxplot.stats(employee_master_cleaned$YearsWithCurrManager,coef = 1.58)$out
+# Thus eliminating the outliers for the employees working with the currentManager
+
+# summary before cleaning the outliers
+summary(employee_master[cont_vars][,-1])
+# summary of the data_after cleaning the outliers
+summary(employee_master_cleaned[cont_vars][,-1])
+
+
+# boxplots of continuous variables devoid of outliers
+
+melt(data = employee_master_cleaned[cont_vars],id.vars = "EmployeeID") %>%
+  ggplot(aes(x = variable, y = value)) +
+  geom_boxplot() +
+  facet_wrap(~variable, scales = "free")
+
+#COMMENTS: Thus, removing the outliers that signficiantly impacted the mean median values of the variables.
+
+temp_employee_df <- employee_master_cleaned
+#employee_master_cleaned <- temp_employee_df
 
 # reverting the Attrition to "Yes", "No"
 employee_master_cleaned$Attrition <- ifelse(test = employee_master_cleaned$Attrition == 1, "Yes","No")
+employee_master_cleaned$Attrition <- as.factor(employee_master_cleaned$Attrition)
 
 #-------------------------------------
 # UNIVARATE ANALYSIS
 #-------------------------------------
 
 #-------------------------------------
-# NOMINAL CATEGORIES:
+# NOMINAL CATEGORIES:"BusinessTravel", "Department" "JobRole" "MaritalStatus" "EducationField" "Gender" 
 #-------------------------------------
 
 str(employee_master_cleaned)
@@ -489,7 +578,7 @@ melt(data = subset(employee_master_cleaned,select = c("Education", "StockOptionL
 #---------------------------------------------------
 
 
-melt(data = subset(employee_master_cleaned,select = c("DistanceFromHome","Age","Attrition","vacations"
+melt(data = subset(employee_master_cleaned,select = c("DistanceFromHome","Age","Attrition","vacations",
                                                              "mean_attendance")),id.vars = "Attrition") %>% 
   ggplot(aes(x = value, fill = Attrition)) +
   geom_histogram(binwidth = 2, aes(y = ..density..)) + 
@@ -512,9 +601,9 @@ melt(data = subset(employee_master_cleaned,select = c("DistanceFromHome","Age","
 #---------------------------------------------------
 # PLOTS FOR RATIO VARIABLES:
 #---------------------------------------------------
-str(employee_master_cleaned$TrainingTimesLastYear)
+# str(employee_master_cleaned$TrainingTimesLastYear)
 # [13] "MonthlyIncome" "PercentSalaryHike"
-# [17] "TotalWorkingYears" "TrainingTimesLastYear"   "YearsAtCompany" "YearsSinceLastPromotion"
+# [17] "TotalWorkingYears" "YearsAtCompany" "YearsSinceLastPromotion"
 # [21] "YearsWithCurrManager"    
 
 # subsetting the data that contain the continuous variables
@@ -544,17 +633,17 @@ ggpairs(df_Ratio_variables) + theme(text = element_text(size = 9))
 # Scaling the continous Variables: Age, DistanceFromHome,MonthlyIncome,PercentSalaryHike, Vacations, mean_attendance:
 scale_var_emp <- c("Age", "DistanceFromHome","MonthlyIncome","PercentSalaryHike", "vacations", "mean_attendance")
 # scaling the variables and assigning to the employee_master_cleaned
-employee_master_cleaned[scale_var_emp] <- lapply(employee_master_cleaned[scale_var_emp], scale) %>% head()
+employee_master_cleaned[scale_var_emp] <-  lapply(employee_master_cleaned[scale_var_emp], scale) #%>% head()
+# converting them to numer
 
+#employee_master_cleaned[scale_var_emp] <- as.numeric(employee_master_cleaned[scale_var_emp])
 
 
 #------------------------------------------------
 # DUMMY VARIABLES
 #------------------------------------------------
 
-
 str(employee_master_cleaned)
-
 
 # Copying the details of the cleaned and merged data frame without the EmployeeID column:
 
@@ -569,8 +658,8 @@ xDummy <- dummyVars(formula = ~ .,data = employee_master_cleaned[,-1],sep = ".",
 employee_dummy_var_df <- data.frame(predict(xDummy,employee_master_cleaned[,-1]))
 
 # Final Dataset
-emp_final_master <- employee_dummy_var_df
-View(emp_final_master)
+emp_master_final <- employee_dummy_var_df
+View(emp_master_final)
 
 #######################
 # SAMPLING OF datasets - test and training dataset of employee
@@ -579,17 +668,21 @@ View(emp_final_master)
 set.seed(100)
 # creating a test and 
 # index of randowm numbers
-index <- sample(x = 1:nrow(emp_final_master),size = 0.7 * nrow(emp_final_master))
+index <- sample(x = 1:nrow(emp_master_final),size = 0.7 * nrow(emp_master_final))
 
 # Test and training Datasets
-train <- emp_final_master[index,]
-test <- employee_dummy_var_df[-index,]
+train <- emp_master_final[index,]
+test <- emp_master_final[-index,]
 
 
 #####################
 # MODEL CREATION
 #####################
 
+# creating the initial model
+hr_model_1 <- glm(formula = Attrition.Yes ~ .,family = "binomial",data = train)
+
+#
 
 
 
@@ -605,6 +698,43 @@ test <- employee_dummy_var_df[-index,]
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+# table(boxplot.stats(df_no_outliers$YearsWithCurrManager,coef = 1.58)$out)
+# table of outliers with current manager and Attrition
+# table(df_no_outliers$YearsWithCurrManager,employee_master_cleaned$Attrition)
+# # Thus removing the outliers
+# df_no_outliers <- df_no_outliers[!(df_no_outliers$YearsWithCurrManager %in% boxplot.stats(x = df_no_outliers$YearsWithCurrManager,coef = 1.58)$out),]
+
+
+# # MONTHLY INCOME: CHECKING OUTLIERS IN "MONTLYINCOME"
+# quantile(df$MonthlyIncome,seq(0,1,0.01)) %>% tail()
+# summary(df$MonthlyIncome)
+# 
+# # Impact of removing the outliers in the monthly income that lie above 99% percentile of monthly_income data and checking the values. 
+# summary(df[-which(df$MonthlyIncome >= quantile(df$MonthlyIncome, 0.95)),])
+# # COMMENTS: no significant change in the mean value
+# 
+# 
+# # Impact of removing Outliers in "YearsAtCompany"
+# quantile(df$YearsAtCompany,seq(0,1,0.01)) %>% tail()
+# summary(df[-which(df$YearsAtCompany >= quantile(df$YearsAtCompany, 0.95)),])
+# # Comment: small change in the mean value
+# 
+# # Impact of "TotalWorkingYears"
+# quantile(df$TotalWorkingYears,seq(0,1,0.01)) %>% tail()
+# summary(df[-which(df$TotalWorkingYears >= quantile(df$TotalWorkingYears, 0.95)),])
+# # Comments: Small change in the mean values
 
 
 # 
