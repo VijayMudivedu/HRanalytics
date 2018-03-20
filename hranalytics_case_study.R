@@ -284,7 +284,7 @@ employee_master_cleaned$Attrition <- ifelse(employee_master_cleaned$Attrition ==
 # convertying the variables of NumCompaniesWored to factors
 employee_master_cleaned$NumCompaniesWorked <- factor(employee_master_cleaned$NumCompaniesWorked)
 
-#install.packages("Information")
+install.packages("Information")
 library(Information)
 
 # creating the information values of the "employee_master_cleaned" data frame to see if the missing values can be imputed with the nearest numbers.
@@ -324,23 +324,67 @@ library(ggplot2)
 
 # plotting for number of companies worked
 ggplot(xNumCompnaiesWorked_df,aes(x = NumCompaniesWorked.NumCompaniesWorked,y = NumCompaniesWorked.IV)) + 
-  geom_point() 
+  geom_point(size = 2) +
+  labs(title = expression(paste(bold("Information Value by Number of Companies"))),
+       x = expression(paste(italic("Number of companies worked for"))),
+       y = expression(paste(italic("Information Value"))))+
+  theme(text = element_text(size = 11),
+        panel.grid.major = element_line(colour = "grey80"),
+        panel.border = element_rect(linetype = "dotted",fill =NA))
 
 # plotting the graph for environment Survey
-ggplot(data.frame(IV_employee_master$Tables["EnvironmentSatisfaction"]),aes(x = (EnvironmentSatisfaction.EnvironmentSatisfaction),y = EnvironmentSatisfaction.IV)) +  geom_point()
+ggplot(data.frame(IV_employee_master$Tables["EnvironmentSatisfaction"]),
+       aes(x = (EnvironmentSatisfaction.EnvironmentSatisfaction),y = EnvironmentSatisfaction.IV)) +  
+  geom_point(size = 2)+
+  labs(title = expression(paste(bold("Information Value by Environmental Satisfaction"))),
+       x = expression(paste(italic("Environmental Satisfaction"))),
+       y = expression(paste(italic("Information Value"))))+
+  theme(text = element_text(size = 11),
+        panel.grid.major = element_line(colour = "grey80"),
+        panel.border = element_rect(linetype = "dotted",fill =NA))
 
 # plots for "JobSatisfaction"
-ggplot(data.frame(IV_employee_master$Tables["JobSatisfaction"]),aes(x = JobSatisfaction.JobSatisfaction,y = JobSatisfaction.IV)) + geom_point()
+ggplot(data.frame(IV_employee_master$Tables["JobSatisfaction"]),
+       aes(x = JobSatisfaction.JobSatisfaction,y = JobSatisfaction.IV)) + 
+  geom_point(size = 2)+
+  labs(title = expression(paste(bold("Information Value by Job Satisfaction"))),
+       x = expression(paste(italic("Job Satisfaction"))),
+       y = expression(paste(italic("Information Value"))))+
+  theme(text = element_text(size = 11),
+        panel.grid.major = element_line(colour = "grey80"),
+        panel.border = element_rect(linetype = "dotted",fill =NA))
 
 # plots for "WorkLifeBalance"
-ggplot(data.frame(IV_employee_master$Tables["WorkLifeBalance"]),aes(x = WorkLifeBalance.WorkLifeBalance,y = WorkLifeBalance.IV)) + geom_point()
+ggplot(data.frame(IV_employee_master$Tables["WorkLifeBalance"]),
+       aes(x = WorkLifeBalance.WorkLifeBalance,y = WorkLifeBalance.IV)) + 
+  geom_point(size = 2)+
+  labs(title = expression(paste(bold("Information Value by Work-Life Balance"))),
+       x = expression(paste(italic("Work-Life Balance"))),
+       y = expression(paste(italic("Information Value"))))+
+  theme(text = element_text(size = 11),
+        panel.grid.major = element_line(colour = "grey80"),
+        panel.border = element_rect(linetype = "dotted",fill =NA))
 
 
 # plotting the graph for Total Working Years
-ggplot(data.frame(IV_TotalWorkingYears$Tables["TotalWorkingYears"]),aes(x = TotalWorkingYears.TotalWorkingYears,y = TotalWorkingYears.IV)) + geom_point() 
+ggplot(data.frame(IV_TotalWorkingYears$Tables["TotalWorkingYears"]),
+       aes(x = reorder(factor(TotalWorkingYears.TotalWorkingYears),TotalWorkingYears.IV),
+           y = TotalWorkingYears.IV)) + 
+  geom_point(size = 2)+
+  labs(title = expression(paste(bold("Information Value by Total Work Exp"))),
+       x = expression(paste(italic("Total Work Exp."))),
+       y = expression(paste(italic("Information Value"))))+
+  theme(text = element_text(size = 11),
+        panel.grid.major = element_line(colour = "grey80"),
+        panel.border = element_rect(linetype = "dotted",fill =NA))
 
-# reording the plot
-ggplot(data.frame(IV_TotalWorkingYears$Tables["TotalWorkingYears"]),aes(x = reorder(factor(TotalWorkingYears.TotalWorkingYears),TotalWorkingYears.IV),y = TotalWorkingYears.IV)) + geom_point() 
+# 
+# # reording the plot
+# ggplot(data.frame(IV_TotalWorkingYears$Tables["TotalWorkingYears"]),
+#        aes(x = reorder(factor(TotalWorkingYears.TotalWorkingYears),TotalWorkingYears.IV),
+#            y = TotalWorkingYears.IV)) + 
+#   geom_point() 
+
 
 # missing values aren't any closer to the nearest WOE. Thus it makes sense to remove the records for the below reasons:
 # 1. It is difficult to  emperically add missing values using Weights of Evidences of these variables
@@ -405,12 +449,18 @@ str(employee_master_cleaned)
 cont_vars <- c("EmployeeID","MonthlyIncome","Age","DistanceFromHome","PercentSalaryHike","TotalWorkingYears","YearsAtCompany","NumCompaniesWorked", "TrainingTimesLastYear","YearsSinceLastPromotion","YearsWithCurrManager","vacations","mean_attendance")
 
 employee_master_cleaned[cont_vars] %>% head()
-# Visualizing the outliers of continuous variables using boxplots
 
+# Visualizing the outliers of continuous variables using boxplots
 melt(data = employee_master_cleaned[cont_vars],id.vars = "EmployeeID") %>% 
   ggplot(aes(x = variable, y = value)) +
   geom_boxplot() +
-  facet_wrap(~variable, scales = "free")
+  facet_wrap(~variable, scales = "free")+
+  labs(title = expression(paste(bold("Checking for outliers"))),
+       x = expression(paste(italic("Continuous variables in data set"))),
+       y = expression(paste(italic("Values"))))+
+  theme(text = element_text(size = 11),
+        panel.grid.major = element_line(colour = "grey80"),
+        panel.border = element_rect(linetype = "dotted",fill =NA))
 
 
 # checking the outliers across all the variables in the df dataset
@@ -503,11 +553,16 @@ summary(employee_master_cleaned[cont_vars][,-1])
 
 
 # boxplots of continuous variables devoid of outliers
-
 melt(data = employee_master_cleaned[cont_vars],id.vars = "EmployeeID") %>%
   ggplot(aes(x = variable, y = value)) +
   geom_boxplot() +
-  facet_wrap(~variable, scales = "free")
+  facet_wrap(~variable, scales = "free") +
+  labs(title = expression(paste(bold("After removing outliers"))),
+       x = expression(paste(italic("Continuous variables in data set"))),
+       y = expression(paste(italic("Values"))))+
+  theme(text = element_text(size = 11),
+        panel.grid.major = element_line(colour = "grey80"),
+        panel.border = element_rect(linetype = "dotted",fill =NA))
 
 #COMMENTS: Thus, removing the outliers that signficiantly impacted the mean median values of the variables.
 
@@ -532,23 +587,32 @@ str(employee_master_cleaned)
 
 library(reshape2)
 library(ggthemes)
-melt(data = subset(employee_master_cleaned,select = c("Attrition","BusinessTravel", "Department","JobRole", 
-                                                             "MaritalStatus","EducationField", "Gender")),id.vars = "Attrition") %>% 
+
+##################ONLY SHOW DATA FOR Yes####################
+melt(data = subset(employee_master_cleaned,
+                   select = c("Attrition","BusinessTravel", 
+                              "Department","JobRole", 
+                              "MaritalStatus","EducationField", "Gender")),
+     id.vars = "Attrition") %>% 
   group_by(variable,value, Attrition) %>% 
   summarise(value_count = n())  %>%
   mutate( per_cnt = paste0(round(value_count*100/sum(value_count)),"%")) %>%
   ggplot(aes(x = factor(reorder(value,-value_count)),y = value_count, fill = Attrition)) +
-    geom_col() + geom_text(aes(label = per_cnt),position = position_stack(vjust = 0.5),size = 2.5) +
+    geom_col() + 
+    geom_text(aes(label = per_cnt),position = position_stack(vjust = 0.5),size = 2.5) +
+    coord_flip()+
     facet_wrap(facets = ~variable,scales = "free",ncol = 3) +
-    theme(axis.text.x = element_text(angle = 90,size = 10),
+    labs(title = expression(paste(bold("%Attrition by each category"))),
+         y = expression(paste(italic("%Attrition"))))+
+    theme(#axis.text.x = element_text(angle = 90,size = 10),
           axis.ticks.x = element_blank(),
-          axis.text.y = element_blank(),
+          # axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
           axis.title.x = element_blank(),
           legend.position = "bottom",
-          panel.background = element_blank()) + 
-  ylab(label = "Percentage of Attrition 'Yes' and 'No' by each category") +
-  scale_fill_manual(values = c("grey69","green4")) 
+          panel.grid.major = element_line(colour = "grey80"),
+          panel.border = element_rect(linetype = "dotted",fill =NA)) + 
+  scale_fill_manual(values = c("grey69","maroon")) 
  
 # COMMENTS: BUSINESS TRAVEL-  TRAVEL_FREQUENTLY, TRAVEL_RARELY ; 
 # ** DEPARTMENT: HRD, R&D, Sales ; 
@@ -568,10 +632,12 @@ str(employee_master_cleaned)
 # "JobSatisfaction","WorkLifeBalance","JobInvolvement","PerformanceRating",
 
 # Plotting the ordinal categories
-melt(data = subset(employee_master_cleaned,select = c("Education", "StockOptionLevel","work_regularity","workLoad",
-                                                      "TrainingTimesLastYear","JobLevel","NumCompaniesWorked",
-                                                      "EnvironmentSatisfaction","JobSatisfaction","WorkLifeBalance",
-                                                      "JobInvolvement","PerformanceRating","Attrition")),
+##################ONLY SHOW DATA FOR Yes####################
+melt(data = subset(employee_master_cleaned,
+                   select = c("Education", "StockOptionLevel","work_regularity","workLoad",
+                              "TrainingTimesLastYear","JobLevel","NumCompaniesWorked",
+                              "EnvironmentSatisfaction","JobSatisfaction","WorkLifeBalance",
+                              "JobInvolvement","PerformanceRating","Attrition")),
      id.vars = "Attrition") %>% 
   group_by(variable,value, Attrition) %>% 
   summarise(value_count = n())  %>%
@@ -579,14 +645,18 @@ melt(data = subset(employee_master_cleaned,select = c("Education", "StockOptionL
   ggplot(aes(x = factor(reorder(value,-value_count)),y = value_count, fill = Attrition)) +
   geom_col() + geom_text(aes(label = per_cnt),position = position_stack(vjust = 0.5),size = 2.5) +
   facet_wrap(facets = ~variable,scales = "free",ncol = 3) +
-  theme(axis.ticks.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_blank(),
-        panel.background = element_blank()) +
-  ylab(label = "Percentage of Attrition 'Yes' and 'No' by each category") +
-  scale_fill_manual(values = c("grey69","hotpink4"))
-  
+  labs(title = expression(paste(bold("%Attrition by each category"))),
+       y = expression(paste(italic("%Attrition")))) +
+  theme(
+    axis.ticks.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.title.x = element_blank(),
+    # legend.position = "bottom",
+    panel.grid.major = element_line(colour = "grey80"),
+    panel.border = element_rect(linetype = "dotted",fill =NA)) + 
+  scale_fill_manual(values = c("grey69","maroon"))
+##################ONLY SHOW DATA FOR Yes####################
 #########################
 # 100% stack bar chart 
 #########################
@@ -602,17 +672,23 @@ melt(data = subset(employee_master_cleaned,select = c("Education", "StockOptionL
 #---------------------------------------------------
 
 
-melt(data = subset(employee_master_cleaned,select = c("DistanceFromHome","Age","Attrition","vacations",
-                                                             "mean_attendance")),id.vars = "Attrition") %>% 
+melt(data = subset(employee_master_cleaned,
+                   select = c("DistanceFromHome","Age","Attrition",
+                              "vacations", "mean_attendance")),
+     id.vars = "Attrition") %>% 
   ggplot(aes(x = value, fill = Attrition)) +
   geom_histogram(binwidth = 2, aes(y = ..density..)) + 
   geom_density(aes(alpha = .001,col = Attrition)) +
   facet_wrap(facets = ~variable,scales = "free",ncol = 2) +
   scale_alpha_identity(guide = "none") +
+  labs(title = expression(paste(bold("%Attrition by employee related variables"))),
+       y = expression(paste(italic("Density distribution")))) +
   theme(axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
         axis.title.x = element_blank(),
-        panel.background = element_blank()) +
+        # panel.background = element_blank(),
+        panel.grid.major = element_line(colour = "grey80"),
+        panel.border = element_rect(linetype = "dotted",fill =NA)) +
   scale_fill_manual(values = c("grey69","navy"))
 
 # NOTE: Change the attrtion attribute for Yes in the density plot.
@@ -633,14 +709,18 @@ melt(data = subset(employee_master_cleaned,select = c("DistanceFromHome","Age","
 # [21] "YearsWithCurrManager"    
 
 # subsetting the data that contain the continuous variables
-df_Ratio_variables <- subset(employee_master_cleaned,select = c("MonthlyIncome","PercentSalaryHike","TotalWorkingYears",
-                                                                   "YearsAtCompany","YearsSinceLastPromotion","YearsWithCurrManager","TrainingTimesLastYear"))
-
+df_Ratio_variables <- subset(employee_master_cleaned,
+                             select = c("MonthlyIncome","PercentSalaryHike","TotalWorkingYears",
+                                        "YearsAtCompany","YearsSinceLastPromotion","YearsWithCurrManager",
+                                        "TrainingTimesLastYear"))
 
 library(GGally)
-
+library(ggplot2)
 # creating the continuous variable plots using ggpairs
-ggpairs(df_Ratio_variables) + theme(text = element_text(size = 9)) 
+ggpairs(df_Ratio_variables) + 
+  labs(title = expression(paste(bold("Plotting correlations between variables")))) +
+  theme(text = element_text(size = 9),
+        panel.grid.major = element_line(colour = "grey80"))
 
 # Comments:
 # There appears strong Positive correlation betwen the variables: 
