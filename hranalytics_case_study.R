@@ -1015,7 +1015,7 @@ write.csv(vif(hr_model_17),"hr_vif.csv")
 
 # MODEL EVALUATION
 
-final_model <- hr_model_15
+final_model <- hr_model_14
 
 # Predicting the probabilites of the model
 hr_attri_prob_pred <- predict(object = final_model,type = "response",newdata = test) # using type="response" predict function returns odds
@@ -1027,7 +1027,6 @@ test$Predicted_probability <- hr_attri_prob_pred
 # EMPTY SEQUENCE AND EMPTY MATRIX TO STORE THE PROABILITIES AND SENSIVITY AND ACCURACY---
 s = seq(.01,max(hr_attri_prob_pred),length = 100)
 output_matrix = matrix(0,100,3)
-
 
 # FUNCTION TO EVALUATE CUTOFF
 perform_fn <- function(cutoff) 
@@ -1051,17 +1050,16 @@ for (i in 1:100)
 
 colnames(output_matrix) <- c("sensitivity", "specificity", "accuracy")
 head(output_matrix)
+output_matrix <- as.data.frame(output_matrix)
+output_matrix$probability <- s
+
 
 # COMPUTING THE CUTOFF_MAX and CUTOFF VALUE accoracy and specificiy ----
-cutoff_max <- s[which.max(abs(output_matrix$sensitivity + output_matrix$specificity + output_matrix$accuracy))]
+#cutoff_max <- s[which.max(abs(output_matrix$sensitivity + output_matrix$specificity + output_matrix$accuracy))]
 
 cut_off <- s[which(abs(output_matrix$sensitivity - output_matrix$specificity) < 0.01)] # CUTOFF VALUE ----
 cut_off
-
 # COMMENTS: cut-off OF sensitiviy, specificity and accuracy reaches optimum at: s:0.1642393
-
-output_matrix <- as.data.frame(output_matrix)
-output_matrix$probability <- s
 
 # PLOTTING THE SENSITIVITY, SPECIFICITY, AND ACCURACY
 ggplot(output_matrix) +
@@ -1097,34 +1095,35 @@ test$predicted_attr_cutoff <- ifelse(predicted_attrition_cutoff == "Yes",1,0)
 
 # PLOTTING THE predicted_attrition and actual attrition
 ggplot(test,aes(x = Predicted_probability,y = predicted_attr_cutoff)) + 
-  geom_point(position = "dodge") + 
-  geom_point(aes(x = Predicted_probability, Y = Attrition_Yes,col = "red"),alpha = 0.08) +
-  ylab("Attrition Rate and Predicted Probability")
+  geom_point() +
+  ylab("Attrition Rate and Predicted Probability") + 
+  geom_smooth(method = "glm",se = FALSE,method.args = list(family = "binomial"))
 
 
 # CROSS VALIDATION OF MODEL 
-
-library(ROCR) # USED TO MEASURE CROSS VALIDATION OF BUILT MODEL ----
+# USING TO MEASURE CROSS VALIDATION OF BUILT MODEL ----
+library(ROCR) 
 
 # COMPUTING THE PREDICTIVE POWER AND PERFORMANCE OF THE MODE TP, TN, FP, FN
 predictHR <- prediction(hr_attri_prob_pred,test$Attrition_Yes) # 
-View(predictHR)
-#
-# performance
+#View(predictHR)
+
+# measuring the performance of the predicted probabilities
 perfHR <- performance(predictHR,measure = "tpr",x.measure = "fpr")
 
-View(perfHR)
+#View(perfHR)
 
 # PLOTTING THE GAIN AND LIFT FOR GAIN chart
 
 # GAIN CHART
 plot(perfHR, col = "blue") + lines(x = c(0,1),y = c(0,1))
+
 perf_gain_hr_analytics <- performance(prediction.obj = predictHR,measure = "tpr",x.measure = "rpp")
 plot(perf_gain_hr_analytics) + lines(x = c(0,1),y = c(0,1))
 
 
 # COMPUTING THE LIFT CHART
-# using the Prediction Objection , rate of positive predictio
+# using the Prediction Objects, rate of positive prediction
 perf_lift_hr_analytics <- performance(prediction.obj = predictHR,measure = "lift",x.measure = "rpp")
 
 # PLOTTING LIFT
@@ -1133,16 +1132,17 @@ plot(perf_lift_hr_analytics)
 # AREAD UNDER THE CURVE IS
 area_under_curve <- performance(predictHR,"auc")
 area_under_curve@y.values
-
+# C0MMENTS: Thus for every record models' probability of prediction of 0.83
 
 #--------------------------------------------------
 # COMPUTING PREDICITVE POWER USING ks-statisitc
 #--------------------------------------------------
 ks_static_hr_anal = max(attr(perfHR,'y.values')[[1]] - attr(perfHR,'x.values')[[1]])
 plot(perfHR, main = paste0(' KS_Statistic=',round(ks_static_hr_anal*100,1),'%'))
+# C0MMENTS: At 54% of KS-Statisitc model has strong ability to predict the positive 
 
 # KS-STATISITIC
-print(ks_static_hr_anal)
+ks_static_hr_anal
 # [1] 0.5412942
 
 
@@ -1150,22 +1150,25 @@ print(ks_static_hr_anal)
 # test data and training set
 library(caret)
 
+# useing the trainControl function to control settings with repeated Covariance and 30 k-fold iterations
 crossValsettings <- trainControl(method = "repeatedcv",number = 30,savePredictions = TRUE)
 
 hr_anal_crossVal <- train( as.factor(Attrition_Yes) ~ Age + BusinessTravel_frequently + 
-    Department_RnD + Department_sales + 
-    JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
-    JobRole_SalesExec + MaritalStatus_Single + 
-    NumCompaniesWorked + TotalWorkingYears + 
-    YearsSinceLastPromotion + YearsWithCurrManager + mean_attendance + 
-    workLoad_1 + workLoad_2 + JobInvolvement_3 + EnvironmentSatisfaction_2 + 
-    EnvironmentSatisfaction_3 + EnvironmentSatisfaction_4 + JobSatisfaction_2 + 
-    JobSatisfaction_3 + JobSatisfaction_4 + WorkLifeBalance_2 + 
-    WorkLifeBalance_3 + WorkLifeBalance_4,data = train,family = "binomial",method = "glmStepAIC",
+    Department_RnD + Department_sales + Education_2 + Education_5 + 
+    EducationField_Mrkt + EducationField_Oth + EducationField_TecDeg + 
+    JobLevel_4 + JobRole_HumRes + JobRole_LabTech + JobRole_Manf_Dir + 
+    JobRole_Res_Dir + JobRole_ResSci + JobRole_SalesExec + MaritalStatus_Married + 
+    MaritalStatus_Single + NumCompaniesWorked + StockOptionLevel_1 + 
+    TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+    YearsWithCurrManager + mean_attendance + work_regularity_1 + 
+    workLoad_1 + workLoad_2 + EnvironmentSatisfaction_2 + EnvironmentSatisfaction_3 + 
+    EnvironmentSatisfaction_4 + JobSatisfaction_2 + JobSatisfaction_3 + 
+    JobSatisfaction_4 + WorkLifeBalance_2 + WorkLifeBalance_3 + 
+    WorkLifeBalance_4 + JobInvolvement_2 + JobInvolvement_3,data = train,family = "binomial",method = "glmStepAIC",
                   trControl = crossValsettings)
-crossVal
 
-
+hr_anal_crossVal
+# the accoracy of the model is 0.86
 
 
 # using gains package
@@ -1181,7 +1184,7 @@ print.gains(hr_analyt_gains)
  seq(0.1,1,0.1)
 # Gain Chart
 ggplot(data.frame(dec = hr_analyt_gains[[1]], cumm_gain = hr_analyt_gains[[6]]),aes(x = dec,cumm_gain)) + 
-  geom_point() + 
+  geom_point(label = cum_gain) + 
   geom_line(linetype = "dotted") + 
   geom_line(aes(x = dec,y = seq(0.1,1,0.1)),linetype = "dashed")
 
