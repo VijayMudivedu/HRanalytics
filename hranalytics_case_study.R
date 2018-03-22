@@ -889,6 +889,7 @@ hr_model_11 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     JobSatisfaction_3 + JobSatisfaction_4 + WorkLifeBalance_2 + 
     WorkLifeBalance_3 + WorkLifeBalance_4, family = "binomial", 
     data = train)
+<<<<<<< HEAD
 
 summary(hr_model_11)
 # checking the collinearity of model_11
@@ -1188,6 +1189,310 @@ ggplot(data.frame(dec = hr_analyt_gains[[1]], cumm_gain = hr_analyt_gains[[6]]),
 
 
 
+=======
+
+summary(hr_model_11)
+# checking the collinearity of model_11
+vif(hr_model_11)
+write.csv(vif(hr_model_11),"hr_vif.csv")
+
+
+# Eliminating - EducationField_TecDeg	p-value:	0.0478790	that has lower p-value
+hr_model_12 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
+    Department_RnD + Department_sales + 
+    JobLevel_4 + 
+    JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
+    JobRole_SalesExec + MaritalStatus_Married + MaritalStatus_Single + 
+    NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
+    YearsSinceLastPromotion + YearsWithCurrManager + mean_attendance + 
+    workLoad_1 + workLoad_2 + JobInvolvement_3 + EnvironmentSatisfaction_2 + 
+    EnvironmentSatisfaction_3 + EnvironmentSatisfaction_4 + JobSatisfaction_2 + 
+    JobSatisfaction_3 + JobSatisfaction_4 + WorkLifeBalance_2 + 
+    WorkLifeBalance_3 + WorkLifeBalance_4, family = "binomial", 
+    data = train)
+
+summary(hr_model_12)
+# checking the collinearity of model_12
+vif(hr_model_12)
+write.csv(vif(hr_model_12),"hr_vif.csv")
+
+## Eliminating - JobLevel_4	p-value:	0.0309330	that has lower p-value
+hr_model_13 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
+    Department_RnD + Department_sales + 
+    JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
+    JobRole_SalesExec + MaritalStatus_Married + MaritalStatus_Single + 
+    NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
+    YearsSinceLastPromotion + YearsWithCurrManager + mean_attendance + 
+    workLoad_1 + workLoad_2 + JobInvolvement_3 + EnvironmentSatisfaction_2 + 
+    EnvironmentSatisfaction_3 + EnvironmentSatisfaction_4 + JobSatisfaction_2 + 
+    JobSatisfaction_3 + JobSatisfaction_4 + WorkLifeBalance_2 + 
+    WorkLifeBalance_3 + WorkLifeBalance_4, family = "binomial", 
+    data = train)
+
+summary(hr_model_13)
+# checking the collinearity of model_13
+vif(hr_model_13)
+write.csv(vif(hr_model_13),"hr_vif.csv")
+
+# MaritalStatus_Married	0.47635	0.20376	2.338	0.0193980	*	MaritalStatus_Married	2.416876822
+# Eliminating - MaritalStatus_Married		p-value:	0.0193980	that has lower p-value
+hr_model_14 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
+    Department_RnD + Department_sales + 
+    JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
+    JobRole_SalesExec + MaritalStatus_Single + 
+    NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
+    YearsSinceLastPromotion + YearsWithCurrManager + mean_attendance + 
+    workLoad_1 + workLoad_2 + JobInvolvement_3 + EnvironmentSatisfaction_2 + 
+    EnvironmentSatisfaction_3 + EnvironmentSatisfaction_4 + JobSatisfaction_2 + 
+    JobSatisfaction_3 + JobSatisfaction_4 + WorkLifeBalance_2 + 
+    WorkLifeBalance_3 + WorkLifeBalance_4, family = "binomial", 
+    data = train)
+
+summary(hr_model_14)
+# checking the collinearity of model_14
+vif(hr_model_14)
+write.csv(vif(hr_model_14),"hr_vif.csv")
+
+
+## Eliminating - TrainingTimesLastYear	-0.12822	0.05406	-2.372	p-value:	0.0177010	that has lower p-value
+hr_model_15 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
+    Department_RnD + Department_sales + 
+    JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
+    JobRole_SalesExec + MaritalStatus_Single + 
+    NumCompaniesWorked + TotalWorkingYears + 
+    YearsSinceLastPromotion + YearsWithCurrManager + mean_attendance + 
+    workLoad_1 + workLoad_2 + JobInvolvement_3 + EnvironmentSatisfaction_2 + 
+    EnvironmentSatisfaction_3 + EnvironmentSatisfaction_4 + JobSatisfaction_2 + 
+    JobSatisfaction_3 + JobSatisfaction_4 + WorkLifeBalance_2 + 
+    WorkLifeBalance_3 + WorkLifeBalance_4, family = "binomial", 
+    data = train)
+
+summary(hr_model_15)
+# checking the collinearity of model_15
+vif(hr_model_15)
+write.csv(vif(hr_model_15),"hr_vif.csv")
+
+
+# These are verifying the models from heres
+
+## Eliminating - 	JobSatisfaction_2	p-value: 0.0095090 	that has lower p-value
+hr_model_16 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
+    Department_RnD + Department_sales + 
+    JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
+    JobRole_SalesExec + MaritalStatus_Single + 
+    NumCompaniesWorked + TotalWorkingYears + 
+    YearsSinceLastPromotion + YearsWithCurrManager + mean_attendance + 
+    workLoad_1 + workLoad_2 + JobInvolvement_3 + EnvironmentSatisfaction_2 + 
+    EnvironmentSatisfaction_3 + EnvironmentSatisfaction_4 + 
+    JobSatisfaction_3 + JobSatisfaction_4 + WorkLifeBalance_2 + 
+    WorkLifeBalance_3 + WorkLifeBalance_4, family = "binomial", 
+    data = train)
+
+summary(hr_model_16)
+# checking the collinearity of model_16
+vif(hr_model_16)
+write.csv(vif(hr_model_16),"hr_vif.csv")
+
+## Eliminating - 	JobSatisfaction_3	p-value: 0.0095090 	that has lower p-value
+hr_model_17 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
+    Department_RnD + Department_sales + 
+    JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
+    JobRole_SalesExec + MaritalStatus_Single + 
+    NumCompaniesWorked + TotalWorkingYears + 
+    YearsSinceLastPromotion + YearsWithCurrManager + mean_attendance + 
+    workLoad_1 + workLoad_2 + JobInvolvement_3 + EnvironmentSatisfaction_2 + 
+    EnvironmentSatisfaction_3 + EnvironmentSatisfaction_4 + 
+    JobSatisfaction_4 + WorkLifeBalance_2 + 
+    WorkLifeBalance_3 + WorkLifeBalance_4, family = "binomial", 
+    data = train)
+
+summary(hr_model_17)
+# checking the collinearity of model_17
+vif(hr_model_17)
+write.csv(vif(hr_model_17),"hr_vif.csv")
+
+
+# the AIC of the model changes significantly when the number GRADUALLY from model 11, further AIC increases from Model 15.
+
+# MODEL EVALUATION
+
+final_model <- hr_model_14
+
+# Predicting the probabilites of the model
+hr_attri_prob_pred <- predict(object = final_model,type = "response",newdata = test) # using type="response" predict function returns odds
+test$Predicted_probability <- hr_attri_prob_pred
+
+
+# COMPUTING OPTIMUM VALUE OF CUTOFF WHEN SENSITIVITY, SPECIFIVITY AND ACCURACY MAXIMIZE  ----
+
+# EMPTY SEQUENCE AND EMPTY MATRIX TO STORE THE PROABILITIES AND SENSIVITY AND ACCURACY---
+s = seq(.01,max(hr_attri_prob_pred),length = 100)
+output_matrix = matrix(0,100,3)
+
+# FUNCTION TO EVALUATE CUTOFF
+perform_fn <- function(cutoff) 
+{
+  hr_attri_pred <- factor(ifelse(hr_attri_prob_pred >= cutoff, "Yes", "No"))
+  conf <- confusionMatrix(hr_attri_pred, actual_attrition, positive = "Yes")
+  acc <- conf$overall[1]
+  sens <- conf$byClass[1]
+  spec <- conf$byClass[2]
+  out <- t(as.matrix(c(sens, spec, acc))) 
+  #colnames(out) <- c("sensitivity", "specificity", "accuracy")
+  return(out)
+}
+
+# ITERATE THE PROBABILITIES TO CALCULATE MATRIX OF SENSITIVITY, SPECIFICITY, AND ACCURACY ----
+
+for (i in 1:100)
+{
+  output_matrix[i,] = perform_fn(s[i])
+} 
+
+colnames(output_matrix) <- c("sensitivity", "specificity", "accuracy")
+head(output_matrix)
+output_matrix <- as.data.frame(output_matrix)
+output_matrix$probability <- s
+
+
+# COMPUTING THE CUTOFF_MAX and CUTOFF VALUE accoracy and specificiy ----
+#cutoff_max <- s[which.max(abs(output_matrix$sensitivity + output_matrix$specificity + output_matrix$accuracy))]
+
+cut_off <- s[which(abs(output_matrix$sensitivity - output_matrix$specificity) < 0.01)] # CUTOFF VALUE ----
+cut_off
+# COMMENTS: cut-off OF sensitiviy, specificity and accuracy reaches optimum at: s:0.1642393
+
+# PLOTTING THE SENSITIVITY, SPECIFICITY, AND ACCURACY
+ggplot(output_matrix) +
+  geom_line(aes(x = s,y = output_matrix$sensitivity,col = "black")) + 
+  geom_line(aes(x = s,y = output_matrix$specificity,col = "blue")) +
+  geom_line(aes(x = s,y = output_matrix$accuracy,col = "green")) +
+  geom_line(aes(x = s,y = abs(output_matrix$sensitivity + output_matrix$specificity + output_matrix$accuracy))) +
+  scale_color_discrete(labels = c("Sensitivity","Specificity","Accuracy")) +
+  geom_vline(xintercept = c(cut_off,cutoff_max),linetype = "dotted") + 
+  xlab(label = "Predicted Probability") + ylab(label = "Sensitiviy, Specificity, and Accuracy")
+
+# CHARACTERISITCS OF THE MODEL AT CUTOFF
+
+# cut-off OF sensitiviy, specificity and accuracy reaches optimum at: s:0.1642393
+predicted_attrition_cutoff <- factor(ifelse(test$Predicted_probability > cut_off,"Yes","No"))
+actual_attrition <- factor(ifelse(test$Attrition_Yes == 1, "Yes","No"))
+
+# confusion Matrix at Cutoff
+conf_cutoff <- confusionMatrix(predicted_attrition_cutoff,actual_attrition,positive = "Yes")
+
+# confusion matrix element
+conf_cutoff$table
+
+# Accuracy
+conf_cutoff$overall[1]
+# sensitivity
+conf_cutoff$byClass[1]
+# specificity
+conf_cutoff$byClass[2]
+
+# ADDIING THE CUTOFF PREDICTED ATTRITION TO TEST 
+test$predicted_attr_cutoff <- ifelse(predicted_attrition_cutoff == "Yes",1,0) 
+
+# PLOTTING THE predicted_attrition and actual attrition
+ggplot(test,aes(x = Predicted_probability,y = predicted_attr_cutoff)) + 
+  geom_point() +
+  ylab("Attrition Rate and Predicted Probability") + 
+  geom_smooth(method = "glm",se = FALSE,method.args = list(family = "binomial"))
+
+
+# CROSS VALIDATION OF MODEL 
+# USING TO MEASURE CROSS VALIDATION OF BUILT MODEL ----
+library(ROCR) 
+
+# COMPUTING THE PREDICTIVE POWER AND PERFORMANCE OF THE MODE TP, TN, FP, FN
+predictHR <- prediction(hr_attri_prob_pred,test$Attrition_Yes) # 
+#View(predictHR)
+
+# measuring the performance of the predicted probabilities
+perfHR <- performance(predictHR,measure = "tpr",x.measure = "fpr")
+
+#View(perfHR)
+
+# PLOTTING THE GAIN AND LIFT FOR GAIN chart
+
+# GAIN CHART
+plot(perfHR, col = "blue") + lines(x = c(0,1),y = c(0,1))
+
+perf_gain_hr_analytics <- performance(prediction.obj = predictHR,measure = "tpr",x.measure = "rpp")
+plot(perf_gain_hr_analytics) + lines(x = c(0,1),y = c(0,1))
+
+
+# COMPUTING THE LIFT CHART
+# using the Prediction Objects, rate of positive prediction
+perf_lift_hr_analytics <- performance(prediction.obj = predictHR,measure = "lift",x.measure = "rpp")
+
+# PLOTTING LIFT
+plot(perf_lift_hr_analytics)
+
+# AREAD UNDER THE CURVE IS
+area_under_curve <- performance(predictHR,"auc")
+area_under_curve@y.values
+# C0MMENTS: Thus for every record models' probability of prediction of 0.83
+
+#--------------------------------------------------
+# COMPUTING PREDICITVE POWER USING ks-statisitc
+#--------------------------------------------------
+ks_static_hr_anal = max(attr(perfHR,'y.values')[[1]] - attr(perfHR,'x.values')[[1]])
+plot(perfHR, main = paste0(' KS_Statistic=',round(ks_static_hr_anal*100,1),'%'))
+# C0MMENTS: At 54% of KS-Statisitc model has strong ability to predict the positive 
+
+# KS-STATISITIC
+ks_static_hr_anal
+# [1] 0.5412942
+
+
+# K-FOLD CROSS VALIDATION
+# test data and training set
+library(caret)
+
+# useing the trainControl function to control settings with repeated Covariance and 30 k-fold iterations
+crossValsettings <- trainControl(method = "repeatedcv",number = 30,savePredictions = TRUE)
+
+hr_anal_crossVal <- train( as.factor(Attrition_Yes) ~ Age + BusinessTravel_frequently + 
+    Department_RnD + Department_sales + Education_2 + Education_5 + 
+    EducationField_Mrkt + EducationField_Oth + EducationField_TecDeg + 
+    JobLevel_4 + JobRole_HumRes + JobRole_LabTech + JobRole_Manf_Dir + 
+    JobRole_Res_Dir + JobRole_ResSci + JobRole_SalesExec + MaritalStatus_Married + 
+    MaritalStatus_Single + NumCompaniesWorked + StockOptionLevel_1 + 
+    TotalWorkingYears + TrainingTimesLastYear + YearsSinceLastPromotion + 
+    YearsWithCurrManager + mean_attendance + work_regularity_1 + 
+    workLoad_1 + workLoad_2 + EnvironmentSatisfaction_2 + EnvironmentSatisfaction_3 + 
+    EnvironmentSatisfaction_4 + JobSatisfaction_2 + JobSatisfaction_3 + 
+    JobSatisfaction_4 + WorkLifeBalance_2 + WorkLifeBalance_3 + 
+    WorkLifeBalance_4 + JobInvolvement_2 + JobInvolvement_3,data = train,family = "binomial",method = "glmStepAIC",
+                  trControl = crossValsettings)
+
+hr_anal_crossVal
+# the accoracy of the model is 0.86
+
+
+# using gains package
+install.packages("gains")
+library(gains)
+
+hr_analyt_gains <- gains(actual = test$Attrition_Yes,predicted = hr_attri_prob_pred,
+      groups = 10,ties.method = c("max"),
+      conf = c("normal"),conf.level = 0.95,
+      optimal = TRUE)
+print.gains(hr_analyt_gains)
+
+ seq(0.1,1,0.1)
+# Gain Chart
+ggplot(data.frame(dec = hr_analyt_gains[[1]], cumm_gain = hr_analyt_gains[[6]]),aes(x = dec,cumm_gain)) + 
+  geom_point(label = cum_gain) + 
+  geom_line(linetype = "dotted") + 
+  geom_line(aes(x = dec,y = seq(0.1,1,0.1)),linetype = "dashed")
+
+
+
+
+>>>>>>> fa8659096724e8d4d632ef35369238a0daf6ecdf
 
 #
 
