@@ -505,7 +505,13 @@ summary(employee_master_cleaned[cont_vars][,-which(names(employee_master_cleaned
 melt(data = employee_master_cleaned[cont_vars],id.vars = "EmployeeID") %>%
   ggplot(aes(x = variable, y = value)) +
   geom_boxplot() +
-  facet_wrap(~variable, scales = "free")
+  facet_wrap(~variable, scales = "free") +
+  labs(title = expression(paste(bold("After removing outliers"))),
+       x = expression(paste(italic("Continuous variables in data set"))),
+       y = expression(paste(italic("Values"))))+
+  theme(text = element_text(size = 11),
+        panel.grid.major = element_line(colour = "grey80"),
+        panel.border = element_rect(linetype = "dotted",fill =NA))
 
 #COMMENTS: Thus, removing the outliers that signficiantly impacted the mean median values of the variables.
 
@@ -523,23 +529,36 @@ employee_master_cleaned$Attrition <- as.factor(employee_master_cleaned$Attrition
 str(employee_master_cleaned)
 library(reshape2)
 library(ggthemes)
-melt(data = subset(employee_master_cleaned,select = c("Attrition","BusinessTravel", "Department","JobRole", 
-                                                             "MaritalStatus","EducationField", "Gender")),id.vars = "Attrition") %>% 
+
+##################ONLY SHOW DATA FOR Yes####################
+melt(data = subset(employee_master_cleaned,
+                   select = c("Attrition","BusinessTravel", 
+                              "Department","JobRole", 
+                              "MaritalStatus","EducationField", "Gender")),
+     id.vars = "Attrition") %>% 
   group_by(variable,value, Attrition) %>% 
   summarise(value_count = n())  %>%
   mutate( per_cnt = paste0(round(value_count*100/sum(value_count)),"%")) %>%
   ggplot(aes(x = factor(reorder(value,-value_count)),y = value_count, fill = Attrition)) +
+<<<<<<< HEAD
     geom_bar(position = "fill",stat = "identity") + geom_text(aes(label = per_cnt),position = position_fill(vjust = 0.5),size = 2.5) +
+=======
+    geom_col() + 
+    geom_text(aes(label = per_cnt),position = position_stack(vjust = 0.5),size = 2.5) +
+    coord_flip()+
+>>>>>>> abhinava
     facet_wrap(facets = ~variable,scales = "free",ncol = 3) +
-    theme(axis.text.x = element_text(angle = 90,size = 10),
+    labs(title = expression(paste(bold("%Attrition by each category"))),
+         y = expression(paste(italic("%Attrition"))))+
+    theme(#axis.text.x = element_text(angle = 90,size = 10),
           axis.ticks.x = element_blank(),
-          axis.text.y = element_blank(),
+          # axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
           axis.title.x = element_blank(),
           legend.position = "bottom",
-          panel.background = element_blank()) + 
-  ylab(label = "Percentage of Attrition 'Yes' and 'No' by each category") +
-  scale_fill_manual(values = c("grey69","green4")) 
+          panel.grid.major = element_line(colour = "grey80"),
+          panel.border = element_rect(linetype = "dotted",fill =NA)) + 
+  scale_fill_manual(values = c("grey69","maroon")) 
  
 
 
@@ -561,10 +580,12 @@ str(employee_master_cleaned)
 # "JobSatisfaction","WorkLifeBalance","JobInvolvement","PerformanceRating",
 
 # Plotting the ordinal categories
-melt(data = subset(employee_master_cleaned,select = c("Education", "StockOptionLevel","work_regularity","workLoad",
-                                                      "TrainingTimesLastYear","JobLevel","NumCompaniesWorked",
-                                                      "EnvironmentSatisfaction","JobSatisfaction","WorkLifeBalance",
-                                                      "JobInvolvement","PerformanceRating","Attrition")),
+##################ONLY SHOW DATA FOR Yes####################
+melt(data = subset(employee_master_cleaned,
+                   select = c("Education", "StockOptionLevel","work_regularity","workLoad",
+                              "TrainingTimesLastYear","JobLevel","NumCompaniesWorked",
+                              "EnvironmentSatisfaction","JobSatisfaction","WorkLifeBalance",
+                              "JobInvolvement","PerformanceRating","Attrition")),
      id.vars = "Attrition") %>% 
   group_by(variable,value, Attrition) %>% 
   summarise(value_count = n())  %>%
@@ -572,6 +593,7 @@ melt(data = subset(employee_master_cleaned,select = c("Education", "StockOptionL
   ggplot(aes(x = factor(reorder(value,-value_count)),y = value_count, fill = Attrition)) +
   geom_bar(position = "fill",stat = "identity") + geom_text(aes(label = per_cnt),position = position_fill(vjust = 0.5),size = 2.5) +
   facet_wrap(facets = ~variable,scales = "free",ncol = 3) +
+<<<<<<< HEAD
   theme(axis.ticks.x = element_blank(),
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
@@ -580,6 +602,24 @@ melt(data = subset(employee_master_cleaned,select = c("Education", "StockOptionL
   ylab(label = "Percentage of Attrition 'Yes' and 'No' by each category") +
   scale_fill_manual(values = c("grey69","hotpink4"))
   
+=======
+  labs(title = expression(paste(bold("%Attrition by each category"))),
+       y = expression(paste(italic("%Attrition")))) +
+  theme(
+    axis.ticks.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.title.x = element_blank(),
+    # legend.position = "bottom",
+    panel.grid.major = element_line(colour = "grey80"),
+    panel.border = element_rect(linetype = "dotted",fill =NA)) + 
+  scale_fill_manual(values = c("grey69","maroon"))
+##################ONLY SHOW DATA FOR Yes####################
+#########################
+# 100% stack bar chart 
+#########################
+
+>>>>>>> abhinava
 
 #COMMENTS: Performance Rating-4,3, JobInvovlment = 1,2, EnvironmentSatisifaction-1, JobSatisifaction -1, WorkLifeBalance 1-4, 
 # NumberCompaniesWorked-7 to 9, Education 2,3,4 StockOption Levels 0,1,2 JobLevel - 0,1 are strong indicators of Attrition
@@ -593,8 +633,10 @@ employee_master_cleaned <- temp_employee_df
 library(RColorBrewer)
 #display.brewer.all()
 
-melt(data = subset(employee_master_cleaned,select = c("DistanceFromHome","Age","Attrition","vacations",
-                                                             "mean_attendance")),id.vars = "Attrition") %>% 
+melt(data = subset(employee_master_cleaned,
+                   select = c("DistanceFromHome","Age","Attrition",
+                              "vacations", "mean_attendance")),
+     id.vars = "Attrition") %>% 
   ggplot(aes(x = value, fill = Attrition)) +
   geom_histogram(binwidth = 2, aes(y = ..density..)) + 
   scale_fill_manual(values = c("grey69","seagreen3")) +
@@ -602,11 +644,24 @@ melt(data = subset(employee_master_cleaned,select = c("DistanceFromHome","Age","
   scale_color_brewer(palette = "BrBG",direction = 1) +
   scale_alpha_identity(guide = "none") + 
   facet_wrap(facets = ~variable,scales = "free",ncol = 2) +
+<<<<<<< HEAD
     theme(axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
         axis.title.x = element_blank(),
         panel.background = element_blank())
   
+=======
+  scale_alpha_identity(guide = "none") +
+  labs(title = expression(paste(bold("%Attrition by employee related variables"))),
+       y = expression(paste(italic("Density distribution")))) +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        # panel.background = element_blank(),
+        panel.grid.major = element_line(colour = "grey80"),
+        panel.border = element_rect(linetype = "dotted",fill =NA)) +
+  scale_fill_manual(values = c("grey69","navy"))
+>>>>>>> abhinava
 
 # NOTE: Change the attrtion attribute for Yes in the density plot.
 
@@ -625,14 +680,18 @@ melt(data = subset(employee_master_cleaned,select = c("DistanceFromHome","Age","
 # [21] "YearsWithCurrManager"    
 
 # subsetting the data that contain the continuous variables
-df_Ratio_variables <- subset(employee_master_cleaned,select = c("MonthlyIncome","PercentSalaryHike","TotalWorkingYears",
-                                                                   "YearsAtCompany","YearsSinceLastPromotion","YearsWithCurrManager","TrainingTimesLastYear"))
-
+df_Ratio_variables <- subset(employee_master_cleaned,
+                             select = c("MonthlyIncome","PercentSalaryHike","TotalWorkingYears",
+                                        "YearsAtCompany","YearsSinceLastPromotion","YearsWithCurrManager",
+                                        "TrainingTimesLastYear"))
 
 library(GGally)
-
+library(ggplot2)
 # creating the continuous variable plots using ggpairs
-ggpairs(df_Ratio_variables) + theme(text = element_text(size = 9)) 
+ggpairs(df_Ratio_variables) + 
+  labs(title = expression(paste(bold("Plotting correlations between variables")))) +
+  theme(text = element_text(size = 9),
+        panel.grid.major = element_line(colour = "grey80"))
 
 # Comments:
 # There appears strong Positive correlation betwen the variables: 
