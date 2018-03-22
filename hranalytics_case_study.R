@@ -1,5 +1,3 @@
-# Predictive Analytics Ikeyboard_arrow_rightGroup Project 1keyboard_arrow_rightSession 1
-
 # ************************************************
 # Business Understanding
 # ************************************************
@@ -8,12 +6,6 @@
 
 # A large company named XYZ, employs, at any given point of time, around 4000 employees. However, every year, around 15% of its employees leave the company and need to be replaced with the talent pool available in the job market. The management believes that this level of attrition (employees leaving, either on their own or because they got fired) is bad for the company, because of the following reasons -
 #   
-#   The former employees’ projects get delayed, which makes it difficult to meet timelines, resulting in a reputation loss among consumers and partners
-# 
-# A sizeable department has to be maintained, for the purposes of recruiting new talent
-# 
-# More often than not, the new employees have to be trained for the job and/or given time to acclimatise themselves to the company
-# 
 # Hence, the management has contracted an HR analytics firm to understand what factors they should focus on, in order to curb attrition. In other words, they want to know what changes they should make to their workplace, in order to get most of their employees to stay. Also, they want to know which of these variables is most important and needs to be addressed right away.
 # 
 # Since you are one of the star analysts at the firm, this project has been given to you.
@@ -40,6 +32,7 @@
 # ************Important Note:************ 
 # You are supposed to code entirely in R. All your plots and tables must be created in R, though you may recreate the same in Tableau as well (for the presentation) for better aesthetics. Please submit the presentation in a PDF format. Please make sure to rename your R script as "Group_Facilitator_RollNo_main.R".
 
+# install.packages("caret")
 
 library(lubridate)
 library(MASS)
@@ -49,6 +42,9 @@ library(caret)
 library(e1071)
 library(reshape2)
 library(ggplot2)
+library(car)
+library(gains)
+library(ROCR)
 
 # READ ALL EXCEL FILES
 #  setwd("~/OneDrive/OneDrive - Atimi Software Inc/Upgrad/case study/HR Analytics CaseStudy/HRAnalytics Case Study")
@@ -62,7 +58,7 @@ out_time <- read.csv("PA-I_Case_Study_HR_Analytics/out_time.csv",stringsAsFactor
 
 
 # reading the data.dictionary
-data_dictionary <- readxl::read_xlsx(path = "PA-I_Case_Study_HR_Analytics/data_dictionary.xlsx")#(file = "PA-I_Case_Study_HR_Analytics/data_dictionary.xlsx")
+# data_dictionary <- readxl::read_xlsx(path = "PA-I_Case_Study_HR_Analytics/data_dictionary.xlsx")#(file = "PA-I_Case_Study_HR_Analytics/data_dictionary.xlsx")
 
 
 # ********************************************************
@@ -308,20 +304,25 @@ library(ggplot2)
 
 # plotting for number of companies worked
 ggplot(xNumCompnaiesWorked_df,aes(x = NumCompaniesWorked.NumCompaniesWorked,y = NumCompaniesWorked.IV)) + 
-  geom_point() 
+  geom_point() +
+  xlab(label = "Num of Companies Worked") + ylab(label = "WOE")
 
 # plotting the graph for environment Survey
-ggplot(data.frame(IV_employee_master$Tables["EnvironmentSatisfaction"]),aes(x = (EnvironmentSatisfaction.EnvironmentSatisfaction),y = EnvironmentSatisfaction.IV)) +  geom_point()
+ggplot(data.frame(IV_employee_master$Tables["EnvironmentSatisfaction"]),aes(x = (EnvironmentSatisfaction.EnvironmentSatisfaction),y = EnvironmentSatisfaction.IV)) +  geom_point() +
+  xlab(label = "EnvironmentSatisfaction") + ylab(label = "WOE")
 
 # plots for "JobSatisfaction"
-ggplot(data.frame(IV_employee_master$Tables["JobSatisfaction"]),aes(x = JobSatisfaction.JobSatisfaction,y = JobSatisfaction.IV)) + geom_point()
+ggplot(data.frame(IV_employee_master$Tables["JobSatisfaction"]),aes(x = JobSatisfaction.JobSatisfaction,y = JobSatisfaction.IV)) + geom_point() +
+  xlab(label = "JobSatisfaction") + ylab(label = "WOE")
 
 # plots for "WorkLifeBalance"
-ggplot(data.frame(IV_employee_master$Tables["WorkLifeBalance"]),aes(x = WorkLifeBalance.WorkLifeBalance,y = WorkLifeBalance.IV)) + geom_point()
+ggplot(data.frame(IV_employee_master$Tables["WorkLifeBalance"]),aes(x = WorkLifeBalance.WorkLifeBalance,y = WorkLifeBalance.IV)) + geom_point() + geom_line() +
+  xlab(label = "WorkLifeBalance") + ylab(label = "WOE")
 
 
 # plotting the graph for Total Working Years
-ggplot(data.frame(IV_TotalWorkingYears$Tables["TotalWorkingYears"]),aes(x = reorder(factor(TotalWorkingYears.TotalWorkingYears),TotalWorkingYears.IV),y = TotalWorkingYears.IV)) + geom_point() 
+ggplot(data.frame(IV_TotalWorkingYears$Tables["TotalWorkingYears"]),aes(x = reorder(factor(TotalWorkingYears.TotalWorkingYears),TotalWorkingYears.IV),y = TotalWorkingYears.IV)) + geom_point() +
+  xlab(label = "TotalWorkingYears") + ylab(label = "WOE")
 
 # WOE of missing values aren't any closer to the nearest WOE segment. Thus it makes sense to remove the records for the below reasons:
 # 1. It is difficult to emperically add missing values using Weights of Evidences of these variables
@@ -540,13 +541,12 @@ melt(data = subset(employee_master_cleaned,
   summarise(value_count = n())  %>%
   mutate( per_cnt = paste0(round(value_count*100/sum(value_count)),"%")) %>%
   ggplot(aes(x = factor(reorder(value,-value_count)),y = value_count, fill = Attrition)) +
-<<<<<<< HEAD
     geom_bar(position = "fill",stat = "identity") + geom_text(aes(label = per_cnt),position = position_fill(vjust = 0.5),size = 2.5) +
-=======
+
     geom_col() + 
     geom_text(aes(label = per_cnt),position = position_stack(vjust = 0.5),size = 2.5) +
     coord_flip()+
->>>>>>> abhinava
+
     facet_wrap(facets = ~variable,scales = "free",ncol = 3) +
     labs(title = expression(paste(bold("%Attrition by each category"))),
          y = expression(paste(italic("%Attrition"))))+
@@ -593,7 +593,7 @@ melt(data = subset(employee_master_cleaned,
   ggplot(aes(x = factor(reorder(value,-value_count)),y = value_count, fill = Attrition)) +
   geom_bar(position = "fill",stat = "identity") + geom_text(aes(label = per_cnt),position = position_fill(vjust = 0.5),size = 2.5) +
   facet_wrap(facets = ~variable,scales = "free",ncol = 3) +
-<<<<<<< HEAD
+
   theme(axis.ticks.x = element_blank(),
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
@@ -602,7 +602,7 @@ melt(data = subset(employee_master_cleaned,
   ylab(label = "Percentage of Attrition 'Yes' and 'No' by each category") +
   scale_fill_manual(values = c("grey69","hotpink4"))
   
-=======
+
   labs(title = expression(paste(bold("%Attrition by each category"))),
        y = expression(paste(italic("%Attrition")))) +
   theme(
@@ -619,7 +619,7 @@ melt(data = subset(employee_master_cleaned,
 # 100% stack bar chart 
 #########################
 
->>>>>>> abhinava
+
 
 #COMMENTS: Performance Rating-4,3, JobInvovlment = 1,2, EnvironmentSatisifaction-1, JobSatisifaction -1, WorkLifeBalance 1-4, 
 # NumberCompaniesWorked-7 to 9, Education 2,3,4 StockOption Levels 0,1,2 JobLevel - 0,1 are strong indicators of Attrition
@@ -644,14 +644,6 @@ melt(data = subset(employee_master_cleaned,
   scale_color_brewer(palette = "BrBG",direction = 1) +
   scale_alpha_identity(guide = "none") + 
   facet_wrap(facets = ~variable,scales = "free",ncol = 2) +
-<<<<<<< HEAD
-    theme(axis.text.y = element_blank(),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_blank(),
-        panel.background = element_blank())
-  
-=======
-  scale_alpha_identity(guide = "none") +
   labs(title = expression(paste(bold("%Attrition by employee related variables"))),
        y = expression(paste(italic("Density distribution")))) +
   theme(axis.text.y = element_blank(),
@@ -659,9 +651,9 @@ melt(data = subset(employee_master_cleaned,
         axis.title.x = element_blank(),
         # panel.background = element_blank(),
         panel.grid.major = element_line(colour = "grey80"),
-        panel.border = element_rect(linetype = "dotted",fill =NA)) +
+        panel.border = element_rect(linetype = "dotted",fill = NA)) +
   scale_fill_manual(values = c("grey69","navy"))
->>>>>>> abhinava
+
 
 # NOTE: Change the attrtion attribute for Yes in the density plot.
 
@@ -702,6 +694,7 @@ ggpairs(df_Ratio_variables) +
 
 # Thus the variables: "YearsAtCompany" "YearsSinceLastPromotion","TotalWorkingYears","YearsAtCompany"are strongly correlated. 
 
+employee_master_cleaned$Attrition <- factor(ifelse(employee_master_cleaned$Attrition == 1, "Yes","No"))
 
 ################################################################
 # ********** MODEL BUILDING *********
@@ -724,10 +717,10 @@ str(employee_master_cleaned)
 # Copying the details of the cleaned and merged data frame without the EmployeeID column:
 employee_dummy_var_df <- employee_master_cleaned[,-which(names(employee_master_cleaned) == "EmployeeID")]
 
-# Method1: of creating dummy variables
 library(caret) # USED TO CREATE DUMMY VARIABLES -----
-# Caret library has a function to create dummy variable
-# using the dummyVars function from the caret Library to convert the employee_master_cleaned data to dummy variables
+
+# using the dummyVars function, from the caret Library to transforming the categorical variables in "employee_master_cleaned" data to dummy variables.
+# This would eliminate several lines of code compared to model.matrix(), instead of repeatedly applying on each of the categorical variables.
 
 xDummy <- dummyVars(formula = ~ .,data = employee_master_cleaned[,-which(names(employee_master_cleaned) == "EmployeeID")],sep = "_", levelsOnly = FALSE, fullRank = TRUE)
 employee_dummy_var_df <- data.frame(predict(xDummy,employee_master_cleaned[,-which(names(employee_master_cleaned) == "EmployeeID")]))
@@ -759,6 +752,7 @@ hr_model_01 <- glm(formula = Attrition_Yes ~ .,family = "binomial",data = train)
 
 # optimizing the hr_model_1 using StepAIC
 hr_model_02 <- stepAIC(hr_model_01,direction = "both")
+# 61 variables were reduced to 30 variables after regressing through Akaike's Information Criterion 
 
 # Summarizing the hr_model_02 
 summary(hr_model_02)
@@ -1158,17 +1152,18 @@ test$predicted_attr_cutoff <- ifelse(predicted_attrition_cutoff == "Yes",1,0)
 ggplot(test,aes(x = Predicted_probability,y = predicted_attr_cutoff)) + 
   geom_point(position = "dodge") + 
   geom_point(aes(x = Predicted_probability, Y = Attrition_Yes,col = "red"),alpha = 0.08) +
-  ylab("Attrition Rate and Predicted Probability")
+  ylab("Attrition Rate and Predicted Probability") 
 
 
 # CROSS VALIDATION OF MODEL 
+par(mfrow = c(2,2))
 
 library(ROCR) # USED TO MEASURE CROSS VALIDATION OF BUILT MODEL ----
 
 # COMPUTING THE PREDICTIVE POWER AND PERFORMANCE OF THE MODE TP, TN, FP, FN
 predictHR <- prediction(hr_attri_prob_pred,test$Attrition_Yes) # 
 View(predictHR)
-#
+
 # performance
 perfHR <- performance(predictHR,measure = "tpr",x.measure = "fpr")
 
@@ -1224,11 +1219,8 @@ hr_anal_crossVal <- train( as.factor(Attrition_Yes) ~ Age + BusinessTravel_frequ
                   trControl = crossValsettings)
 crossVal
 
-
-
-
 # using gains package
-install.packages("gains")
+# install.packages("gains")
 library(gains)
 
 hr_analyt_gains <- gains(actual = test$Attrition_Yes,predicted = hr_attri_prob_pred,
@@ -1237,15 +1229,45 @@ hr_analyt_gains <- gains(actual = test$Attrition_Yes,predicted = hr_attri_prob_p
       optimal = TRUE)
 print.gains(hr_analyt_gains)
 
- seq(0.1,1,0.1)
-# Gain Chart
+# Plotting Gain Chart
 ggplot(data.frame(dec = hr_analyt_gains[[1]], cumm_gain = hr_analyt_gains[[6]]),aes(x = dec,cumm_gain)) + 
   geom_point() + 
-  geom_line(linetype = "dotted") + 
-  geom_line(aes(x = dec,y = seq(0.1,1,0.1)),linetype = "dashed")
+  # geom_line(linetype = "dotted") + 
+  # geom_line(aes(x = dec,y = seq(0.1,1,0.1)),linetype = "dashed") +
+  # xlab(label = "decile") + ylab(label = "Cummulative Gain")
 
 
-#
+# coefficients values in the model
+hr_model_15$coefficients
+
+# (Intercept)                     Age 
+# 1.2055018                -0.3486585 
+# BusinessTravel_frequently  Department_RnD 
+# 1.1853131                -0.9538096 
+# Department_sales           JobRole_LabTech 
+# -1.1825023                 0.5910383 
+# JobRole_Res_Dir            JobRole_ResSci 
+# 0.9587616                 0.5207675 
+# JobRole_SalesExec      MaritalStatus_Single 
+# 0.6998034                 1.1194237 
+# NumCompaniesWorked         TotalWorkingYears 
+# 0.1549323                -0.1077533 
+# YearsSinceLastPromotion      YearsWithCurrManager 
+# 0.1884030                -0.1486597 
+# mean_attendance                workLoad_1 
+# 0.3500662                 1.9915155 
+# workLoad_2          JobInvolvement_3 
+# 0.8896388                -0.4260892 
+# EnvironmentSatisfaction_2 EnvironmentSatisfaction_3 
+# -0.8286463                -0.8667352 
+# EnvironmentSatisfaction_4 JobSatisfaction_2 
+# -1.3368172                -0.5098920 
+# JobSatisfaction_3         JobSatisfaction_4 
+# -0.4853897                -1.4299662 
+# WorkLifeBalance_2         WorkLifeBalance_3 
+# -1.1616639                -1.4883921 
+# WorkLifeBalance_4 
+# -1.1651051 
 
 
 
@@ -1303,9 +1325,15 @@ ggplot(data.frame(dec = hr_analyt_gains[[1]], cumm_gain = hr_analyt_gains[[6]]),
 # employee_dummy_var_df$Attrition <- ifelse(employee_master_cleaned$Attrition == "Yes",1,0)
 # 
 # # BUSINESS_TRAVEL: Creating Dummy Variable for BUSINESS_TRAVEL 
-# dummy_var_BUSTRVL <- data.frame(model.matrix(~BusinessTravel,employee_dummy_var_df))[,-1]
-# #  adding dummry variable to the "employe_dummy_data_frame"
-# employee_dummy_var_df <- cbind(dummy_var_BUSTRVL,employee_dummy_var_df[,-which(names(employee_dummy_var_df) == "BusinessTravel")])
+#  dummy_var_BUSTRVL <- data.frame(model.matrix(~BusinessTravel,employee_master_cleaned))[,-1]
+# #   adding dummry variable to the "employe_dummy_data_frame"
+#  employee_dummy_var_df <- cbind(dummy_var_BUSTRVL,employee_dummy_var_d[,-which(names(employee_dummy_var_df) == "BusinessTravel")])
+#  names(dummy_var_BUSTRVL)
+#  names(employee_dummy_var_df)
+# 
+# sum(employee_dummy_var_df[c("BusinessTravel_frequently")] != dummy_var_BUSTRVL["BusinessTravelfrequently"])
+# sum(employee_dummy_var_df[c("BusinessTravel_rarely")] != dummy_var_BUSTRVL["BusinessTravelrarely"])
+ 
 # 
 # # DEPARTMENT: creating Dummy variable for DEPARETMENT variable. 
 # employee_dummy_var_df$Department <- employee_master_cleaned$Department
