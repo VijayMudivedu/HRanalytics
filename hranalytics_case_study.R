@@ -1189,6 +1189,18 @@ ggplot(data.frame(dec = hr_analyt_gains[[1]], cumm_gain = hr_analyt_gains[[6]]),
 #
 
 
+
+
+
+
+
+
+
+
+
+
+# UNUSED CODE
+
 # employees irregular to work/heavily worked and taking vacations.. This is not a useful metric, as the resigned date is not known... SO COMMENTING THE BELOW CODE
 # apply(in_out_data_without_stats, MARGIN = 1, FUN = function(x) sum(x[1:ncol(in_out_data_without_stats)][(x > 9) & (x == 0)],na.rm = TRUE)) 
 # sum(rowSums((in_out_data_without_stats > 9) & (in_out_data_without_stats == 0)))
