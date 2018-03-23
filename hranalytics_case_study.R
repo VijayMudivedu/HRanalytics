@@ -35,6 +35,7 @@
 # install.packages("caret")
 #dev.off()
 
+formatR::tidy_source()
 library(lubridate)
 library(MASS)
 library(tidyverse)
@@ -170,7 +171,7 @@ regularity_df <- data.frame(work_cnt = rowSums((in_out_data_without_stats > 0) &
 table(regularity_df)
 quantile(regularity_df$work_cnt,seq(0,1,0.25))
 
-# Plotting it
+# Plotting histogram of regularity_df to visualize the distribution of data
 ggplot(regularity_df,aes(work_cnt)) + geom_histogram(binwidth = 2)
 
 # COMMENTS: 
@@ -243,11 +244,11 @@ XempMaster[which(XempMaster > 0)]
 
 # NumCompaniesWorked, TotalWorkingYears, EnvironmentSatisfaction, Jobsatisfaction, WorklifeBallance of an employee is subjective. It doesn't make sense to replace the NA's with median or mean of the respective variable. Thus deleting the records of the employees that do not have enough data is one among the better solutions. But before attempting to remove the recors, using the Weight of Evidence and Information Values, method of transformation of variables validate the claim, let 
 
-#----------------------------------------------------------------------------------------
-# WOE and IV analysis of the missing NA values to validate the NA values.
-#----------------------------------------------------------------------------------------
+#---------------------
+# WOE and IV analysis
+#---------------------
 
-##----------------------------------------------------------------------------------------
+
 # Attempting to approximate the "NA"s in NumCompaniesWorked,EnvironmentSatisfaction,JobSatisfaction,WorkLifeBalance using the Weight of Evidence (WOE) and Information Values (IV) methods
 
 employee_master_cleaned <- employee_master
@@ -277,8 +278,8 @@ IV_employee_master <- create_infotables(data = employee_master_cleaned[which(nam
 
 print(IV_employee_master)
 
-#**** WOE of Missing values = 0.39 of TotalworkingYears lie between and 2 and 3 years, closer to 3 years (0.35). 
-# Thus imputing the missing values with years and calculating the WOE and IV independently for TotalWorkingYears. ******
+# WOE of Missing values = 0.39 of TotalworkingYears lie between and 2 and 3 years, closer to 3 years (0.35). 
+# Thus imputing the missing values with years and calculating the WOE and IV independently for TotalWorkingYears
 
 employee_master_cleaned$TotalWorkingYears[which(employee_master_cleaned$TotalWorkingYears == "missing")] <- 3
 str(employee_master_cleaned$TotalWorkingYears)
@@ -293,7 +294,7 @@ print(IV_TotalWorkingYears)
 
 # COMMENTS: Thus for the data IV values - 0.42 is a strong predictor for the variable Total working years of experince.
 
-# For other variables, predictors range from intermediate to Weak IV Values......
+# For other variables, predictors range from intermediate to Weak IV Values
 
 xNumCompnaiesWorked <- IV_employee_master$Tables["NumCompaniesWorked"]
 xNumCompnaiesWorked_df <- as.data.frame(xNumCompnaiesWorked)
@@ -532,8 +533,6 @@ str(employee_master_cleaned)
 library(reshape2)
 library(ggthemes)
 
-##################ONLY SHOW DATA FOR Yes####################
-
  temp_df1 <- as.data.frame(melt(data = subset(employee_master_cleaned,
                    select = c("Attrition","BusinessTravel", 
                               "Department","JobRole", 
@@ -544,9 +543,10 @@ library(ggthemes)
   mutate( per_cnt = paste0(round(value_count*100/sum(value_count)),"%")) )
 
 # Plotting the temp_df1 data
- temp_df1 %>% filter(Attrition == "Yes" ) %>% # filter "Attrition" for "Yes"
+ temp_df1 %>% #filter(Attrition == "Yes" ) %>% # filter "Attrition" for "Yes"
   ggplot(aes(x = factor(reorder(value,-value_count)),y = value_count, fill = Attrition)) +
-  geom_bar(position = "stack",stat = "identity") + geom_text(aes(label = per_cnt),position = position_stack(vjust = 0.5),size = 2.5) +
+  geom_bar(position = "fill",stat = "identity") + 
+   geom_text(aes(label = per_cnt),position = position_fill(vjust = 0.5),size = 2.5) +
   coord_flip() +
   facet_wrap(facets = ~variable,scales = "free",ncol = 3) +
     labs(title = expression(paste(bold("% Attrition by each Nominal category")))) +
@@ -559,7 +559,7 @@ library(ggthemes)
           legend.position = "bottom",
           panel.grid.major = element_line(colour = "grey80"),
           panel.border = element_rect(linetype = "dotted",fill = NA)) + 
-  scale_fill_manual(values = c("mediumspringgreen")) 
+  scale_fill_manual(values = c("snow","mediumspringgreen")) 
  
 
 
@@ -588,7 +588,7 @@ temp_df2 <- as.data.frame(melt(data = subset(employee_master_cleaned,
                      mutate( per_cnt = paste0(round(value_count*100/sum(value_count)),"%")))
 
  # Plotting the temp_df1 data
-temp_df2 %>% filter(Attrition == "Yes") %>%     # filter "Attrition" for "Yes"
+p1 <- temp_df2 %>%     # filter "Attrition" for "Yes"
   ggplot(aes(x = factor(reorder(value,-value_count)),y = value_count, fill = Attrition)) +
   geom_bar(position = "fill",stat = "identity") + geom_text(aes(label = per_cnt),position = position_fill(vjust = 0.5),size = 2.5) +
   facet_wrap(facets = ~variable,scales = "free",ncol = 2) +
@@ -599,10 +599,10 @@ temp_df2 %>% filter(Attrition == "Yes") %>%     # filter "Attrition" for "Yes"
     axis.title.x = element_blank(),
     axis.title.y = element_blank(),
     plot.title = element_text(hjust = 0.5),
-    # legend.position = "bottom",
+    legend.position = "bottom",
     panel.grid.major = element_line(colour = "grey80"),
     panel.border = element_rect(linetype = "dotted",fill = NA)) + 
-  scale_fill_manual(values = c("mediumaquamarine"))
+  scale_fill_manual(values = c("grey69","mediumaquamarine"))
 
 
 #COMMENTS: Performance Rating-4,3, JobInvovlment = 1,2, EnvironmentSatisifaction-1, JobSatisifaction -1, WorkLifeBalance 1-4, 
@@ -613,11 +613,11 @@ temp_df2 %>% filter(Attrition == "Yes") %>%     # filter "Attrition" for "Yes"
 #---------------------------------------------------
 # PLOTS BY - INTERVAL CONTINUOUS VARIABLES 
 #---------------------------------------------------
-employee_master_cleaned <- temp_employee_df
+# employee_master_cleaned <- temp_employee_df
 library(RColorBrewer)
 #display.brewer.all()
 
-melt(data = subset(employee_master_cleaned,
+p2<-melt(data = subset(employee_master_cleaned,
                    select = c("DistanceFromHome","Age","Attrition","vacations", "mean_attendance")),
      id.vars = "Attrition") %>% 
   ggplot(aes(x = value, fill = Attrition)) +
@@ -633,6 +633,7 @@ melt(data = subset(employee_master_cleaned,
         axis.ticks.y = element_blank(),
         axis.title.x = element_blank(),
         plot.title = element_text(hjust = 0.5),
+        legend.position = "bottom",
         # panel.background = element_blank(),
         panel.grid.major = element_line(colour = "grey80"),
         panel.border = element_rect(linetype = "dotted",fill = NA)) 
@@ -644,6 +645,11 @@ melt(data = subset(employee_master_cleaned,
 # Age: 25-35 
 # Vacations: More Spiked Vacations between 20 and 30
 # Attendance: Spiked 7 hours or 10 hours are some of the good indicators from data with Attrition
+
+
+# PLOTTING ORDINAL AND INTERVAL VARIABLES TOGETHER
+gridExtra::grid.arrange(p1,p2,nrow = 1,widths = 2:1)
+
 
 #---------------------------------------------------
 # PLOTS FOR RATIO VARIABLES:
@@ -711,9 +717,9 @@ employee_dummy_var_df <- data.frame(predict(xDummy,employee_master_cleaned[,-whi
 emp_master_final <- employee_dummy_var_df
 head(emp_master_final)
 
-#######################
+#------------------------------------------------
 # SAMPLING OF datasets - test and training dataset of employee
-#######################
+#------------------------------------------------######################
 # 
 set.seed(100)
 # creating a test and 
@@ -725,9 +731,9 @@ train <- emp_master_final[index,]
 test <- emp_master_final[-index,]
 
 
-#####################
+#------------------------------------------------
 # MODEL CREATION
-#####################
+#------------------------------------------------
 
 # creating the initial model
 hr_model_01 <- glm(formula = Attrition_Yes ~ .,family = "binomial",data = train)
@@ -1046,10 +1052,54 @@ vif(hr_model_17)
 write.csv(vif(hr_model_17),"hr_vif.csv")
 
 
+## Eliminating - 	mean_attendance	0.35537	0.1303	2.727	0.0063860	**		4.730408944 lower p-value
+hr_model_18 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
+                     Department_RnD + Department_sales + 
+                     JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
+                     JobRole_SalesExec + MaritalStatus_Single + 
+                     NumCompaniesWorked + TotalWorkingYears + 
+                     YearsSinceLastPromotion + YearsWithCurrManager + 
+                     workLoad_1 + workLoad_2 + JobInvolvement_3 + EnvironmentSatisfaction_2 + 
+                     EnvironmentSatisfaction_3 + EnvironmentSatisfaction_4 + 
+                     JobSatisfaction_4 + WorkLifeBalance_2 + 
+                     WorkLifeBalance_3 + WorkLifeBalance_4, family = "binomial", 
+                   data = train)
+
+summary(hr_model_18)
+# checking the collinearity of model_18
+vif(hr_model_18)
+write.csv(vif(hr_model_18),"hr_vif.csv")
+
+
+## Eliminating - 	 JobRole_LabTech	that has lower p-value
+hr_model_19 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
+                     Department_RnD + Department_sales + 
+                     JobRole_Res_Dir + JobRole_ResSci + 
+                     JobRole_SalesExec + MaritalStatus_Single + 
+                     NumCompaniesWorked + TotalWorkingYears + 
+                     YearsSinceLastPromotion + YearsWithCurrManager + 
+                     workLoad_1 + workLoad_2 + JobInvolvement_3 + EnvironmentSatisfaction_2 + 
+                     EnvironmentSatisfaction_3 + EnvironmentSatisfaction_4 + 
+                     JobSatisfaction_4 + WorkLifeBalance_2 + 
+                     WorkLifeBalance_3 + WorkLifeBalance_4, family = "binomial", 
+                   data = train)
+
+summary(hr_model_19)
+# checking the collinearity of model_19
+vif(hr_model_19)
+write.csv(vif(hr_model_19),"hr_vif.csv")
+
+
+
+
+
+
 # the AIC of the model changes significantly when the number GRADUALLY from model 11, further AIC increases from Model 15.
 
+#------------------------------------------------
 # MODEL EVALUATION
-
+#------------------------------------------------
+  
 final_model <- hr_model_15
 
 # Predicting the probabilites of the model
@@ -1063,6 +1113,8 @@ test$Predicted_probability <- hr_attri_prob_pred
 s = seq(.01,max(hr_attri_prob_pred),length = 100)
 output_matrix = matrix(0,100,3)
 
+# create an output matrix data.fram
+output_matrix <- as.data.frame(output_matrix)
 
 # FUNCTION TO EVALUATE CUTOFF
 perform_fn <- function(cutoff) 
@@ -1086,17 +1138,15 @@ for (i in 1:100)
 
 colnames(output_matrix) <- c("sensitivity", "specificity", "accuracy")
 head(output_matrix)
+output_matrix$probability <- s
 
 # COMPUTING THE CUTOFF_MAX and CUTOFF VALUE accoracy and specificiy ----
 cutoff_max <- s[which.max(abs(output_matrix$sensitivity + output_matrix$specificity + output_matrix$accuracy))]
 
-cut_off <- s[which(abs(output_matrix$sensitivity - output_matrix$specificity) < 0.01)] # CUTOFF VALUE ----
+cut_off <- s[which.min(abs(output_matrix$sensitivity - output_matrix$specificity))] # CUTOFF VALUE ----
 cut_off
 
 # COMMENTS: cut-off OF sensitiviy, specificity and accuracy reaches optimum at: s:0.1642393
-
-output_matrix <- as.data.frame(output_matrix)
-output_matrix$probability <- s
 
 # PLOTTING THE SENSITIVITY, SPECIFICITY, AND ACCURACY
 ggplot(output_matrix) +
@@ -1134,42 +1184,60 @@ test$predicted_attr_cutoff <- ifelse(predicted_attrition_cutoff == "Yes",1,0)
 ggplot(test,aes(x = Predicted_probability,y = predicted_attr_cutoff)) + 
   geom_point(position = "dodge") + 
   geom_point(aes(x = Predicted_probability, Y = Attrition_Yes,col = "red"),alpha = 0.08) +
+  geom_smooth(method = "glm",se = FALSE,method.args = list(family = "binomial")) +
   ylab("Attrition Rate and Predicted Probability") 
 
 
-# CROSS VALIDATION OF MODEL 
-par(mfrow = c(2,2))
-
+#-----------------------------------------------------------
+# CROSS VALIDATION OF the MODEL using GAIN CHART LIFT CHART
+#-----------------------------------------------------------
 library(ROCR) # USED TO MEASURE CROSS VALIDATION OF BUILT MODEL ----
 
 # COMPUTING THE PREDICTIVE POWER AND PERFORMANCE OF THE MODE TP, TN, FP, FN
-predictHR <- prediction(hr_attri_prob_pred,test$Attrition_Yes) # 
-View(predictHR)
+predictHR <- prediction(hr_attri_prob_pred,test$Attrition_Yes)
 
-# performance
+#-------------
+# GAIN CHART
+#-------------
+# Computing the performance of predictions
 perfHR <- performance(predictHR,measure = "tpr",x.measure = "fpr")
 
-View(perfHR)
+# PLOTTING THE GAIN Chart ----
+#plot(perfHR, col = "blue") + lines(x = c(0,1),y = c(0,1))
+temp_df <- data.frame(x = perfHR@x.values, y = perfHR@y.values)
+names(temp_df) <- c("x","y")
+perfHR@x.name
+perfHR@y.name
 
-# PLOTTING THE GAIN AND LIFT FOR GAIN chart
+# PLOTTING THE GAIN CHART
+ggplot(temp_df,aes(x = x, y = y)) + 
+  geom_line(na.rm = T) + 
+  geom_line(aes(x = y ,y = y),linetype = "dotted") +
+  labs(title = expression(bold("Gain Chart"))) + xlab(label = "False positive rate") + ylab(label = "True positive rate") + 
+  theme(plot.title = element_text(hjust = 0.5))
 
-# GAIN CHART
-plot(perfHR, col = "blue") + lines(x = c(0,1),y = c(0,1))
-perf_gain_hr_analytics <- performance(prediction.obj = predictHR,measure = "tpr",x.measure = "rpp")
-plot(perf_gain_hr_analytics) + lines(x = c(0,1),y = c(0,1))
+# COMMENTS: PLOTS GIVES INFORMATION ABOUT THE HOW WELL THE MODEL IS SCALING AGAINST THE RANDOM MODEL.
 
+#-------------
+# LIFT CHART
+#-------------
 
-# COMPUTING THE LIFT CHART
-# using the Prediction Objection , rate of positive predictio
 perf_lift_hr_analytics <- performance(prediction.obj = predictHR,measure = "lift",x.measure = "rpp")
+ 
+temp_df3 <- data.frame(x = perf_lift_hr_analytics@x.values, y = perf_lift_hr_analytics@y.values)
+summary(temp_df3)
+names(temp_df3) <- c("x","y")
 
-# PLOTTING LIFT
-plot(perf_lift_hr_analytics)
+# PLOTTING THE LIFT CHART
+ggplot(temp_df3,aes(x = x, y = y)) + geom_line(na.rm = T) + 
+  labs(title = expression(bold("Lift Chart"))) + xlab(label = "Rate of positive predictions") + ylab(label = "Lift Value") + 
+  theme(plot.title = element_text(hjust = 0.5))
+# COMMENTS: PLOTS GIVES INFORMATION ABOUT THE HOW WELL THE MODEL IS SCALING AGAINST THE RANDOM MODEL.
 
 # AREAD UNDER THE CURVE IS
 area_under_curve <- performance(predictHR,"auc")
 area_under_curve@y.values
-
+# COMMENTS: WITH AREA UNDER THE CURVE CLOSER TO 1, MODEL IS SCALING WELL AGAINST THE DATA.
 
 #--------------------------------------------------
 # COMPUTING PREDICITVE POWER USING ks-statisitc
@@ -1182,30 +1250,29 @@ print(ks_static_hr_anal)
 # [1] 0.5412942
 
 
+#--------------------------------------------------
 # K-FOLD CROSS VALIDATION
-# test data and training set
+#--------------------------------------------------
+
 library(caret)
 
+summary(hr_model_01)
+
+# preparing the data for a repeated covariance
 crossValsettings <- trainControl(method = "repeatedcv",number = 30,savePredictions = TRUE)
 
-hr_anal_crossVal <- train( as.factor(Attrition_Yes) ~ Age + BusinessTravel_frequently + 
-    Department_RnD + Department_sales + 
-    JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
-    JobRole_SalesExec + MaritalStatus_Single + 
-    NumCompaniesWorked + TotalWorkingYears + 
-    YearsSinceLastPromotion + YearsWithCurrManager + mean_attendance + 
-    workLoad_1 + workLoad_2 + JobInvolvement_3 + EnvironmentSatisfaction_2 + 
-    EnvironmentSatisfaction_3 + EnvironmentSatisfaction_4 + JobSatisfaction_2 + 
-    JobSatisfaction_3 + JobSatisfaction_4 + WorkLifeBalance_2 + 
-    WorkLifeBalance_3 + WorkLifeBalance_4,data = train,family = "binomial",method = "glmStepAIC",
+hr_anal_crossVal <- train(as.factor(Attrition_Yes) ~ . ,data = train,family = "binomial",method = "glmStepAIC",
                   trControl = crossValsettings)
-crossVal
+hr_anal_crossVal
 
 # using gains package
 # install.packages("gains")
 library(gains)
 
-hr_analyt_gains <- gains(actual = test$Attrition_Yes,predicted = hr_attri_prob_pred,
+length(test$Attrition_Yes)
+length(test$predicted_attr_cutoff)
+
+hr_analyt_gains <- gains(actual = test$Attrition_Yes,predicted = test$Predicted_probability,
       groups = 10,ties.method = c("max"),
       conf = c("normal"),conf.level = 0.95,
       optimal = TRUE)
@@ -1214,11 +1281,21 @@ print.gains(hr_analyt_gains)
 library(ggplot2)
 # Plotting Gain Chart
 ggplot(data.frame(dec = hr_analyt_gains[[1]], cumm_gain = hr_analyt_gains[[6]]),aes(x = dec,y = cumm_gain)) + 
-  geom_point()
-  #+ geom_smooth(method = "glm",se = FALSE,method.args = list(family = "binomial"))
-  # geom_line(linetype = "dotted") + 
-  # geom_line(aes(x = dec,y = seq(0.1,1,0.1)),linetype = "dashed") +
-  # xlab(label = "decile") + ylab(label = "Cummulative Gain")
+  geom_point() + geom_text(aes(label = paste0(round(cumm_gain*100,1),"%")),nudge_y = 0.05) +
+  geom_line(linetype = "dotted") + 
+  geom_line(aes(x = dec,y = seq(0.1,1,0.1)),linetype = "dashed") +
+  xlab(label = "decile") + ylab(label = "Cummulative Gain") +
+  labs(title = expression(bold("Gain Chart"))) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Plotting the lift
+
+ggplot(data.frame(dec = hr_analyt_gains[[1]], lift = hr_analyt_gains[[6]]*100/hr_analyt_gains[[1]]),aes(x = dec,y = lift)) + 
+  geom_point() +
+  geom_line(linetype = "dotted") + 
+  xlab(label = "decile") + ylab(label = "Lift")
+
 
 
 # coefficients values in the model
