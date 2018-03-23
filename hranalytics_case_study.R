@@ -33,6 +33,7 @@
 # You are supposed to code entirely in R. All your plots and tables must be created in R, though you may recreate the same in Tableau as well (for the presentation) for better aesthetics. Please submit the presentation in a PDF format. Please make sure to rename your R script as "Group_Facilitator_RollNo_main.R".
 
 # install.packages("caret")
+#dev.off()
 
 library(lubridate)
 library(MASS)
@@ -1229,9 +1230,11 @@ hr_analyt_gains <- gains(actual = test$Attrition_Yes,predicted = hr_attri_prob_p
       optimal = TRUE)
 print.gains(hr_analyt_gains)
 
+library(ggplot2)
 # Plotting Gain Chart
-ggplot(data.frame(dec = hr_analyt_gains[[1]], cumm_gain = hr_analyt_gains[[6]]),aes(x = dec,cumm_gain)) + 
-  geom_point() + 
+ggplot(data.frame(dec = hr_analyt_gains[[1]], cumm_gain = hr_analyt_gains[[6]]),aes(x = dec,y = cumm_gain)) + 
+  geom_point()
+  #+ geom_smooth(method = "glm",se = FALSE,method.args = list(family = "binomial"))
   # geom_line(linetype = "dotted") + 
   # geom_line(aes(x = dec,y = seq(0.1,1,0.1)),linetype = "dashed") +
   # xlab(label = "decile") + ylab(label = "Cummulative Gain")
