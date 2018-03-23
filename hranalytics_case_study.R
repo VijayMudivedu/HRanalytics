@@ -33,6 +33,7 @@
 # You are supposed to code entirely in R. All your plots and tables must be created in R, though you may recreate the same in Tableau as well (for the presentation) for better aesthetics. Please submit the presentation in a PDF format. Please make sure to rename your R script as "Group_Facilitator_RollNo_main.R".
 
 # install.packages("caret")
+#dev.off()
 
 library(lubridate)
 library(MASS)
@@ -512,7 +513,7 @@ melt(data = employee_master_cleaned[cont_vars],id.vars = "EmployeeID") %>%
        y = expression(paste(italic("Values"))))+
   theme(text = element_text(size = 11),
         panel.grid.major = element_line(colour = "grey80"),
-        panel.border = element_rect(linetype = "dotted",fill =NA))
+        panel.border = element_rect(linetype = "dotted",fill = NA))
 
 #COMMENTS: Thus, removing the outliers that signficiantly impacted the mean median values of the variables.
 
@@ -532,33 +533,33 @@ library(reshape2)
 library(ggthemes)
 
 ##################ONLY SHOW DATA FOR Yes####################
-melt(data = subset(employee_master_cleaned,
+
+ temp_df1 <- as.data.frame(melt(data = subset(employee_master_cleaned,
                    select = c("Attrition","BusinessTravel", 
                               "Department","JobRole", 
                               "MaritalStatus","EducationField", "Gender")),
      id.vars = "Attrition") %>% 
   group_by(variable,value, Attrition) %>% 
   summarise(value_count = n())  %>%
-  mutate( per_cnt = paste0(round(value_count*100/sum(value_count)),"%")) %>%
+  mutate( per_cnt = paste0(round(value_count*100/sum(value_count)),"%")) )
+
+# Plotting the temp_df1 data
+ temp_df1 %>% filter(Attrition == "Yes" ) %>% # filter "Attrition" for "Yes"
   ggplot(aes(x = factor(reorder(value,-value_count)),y = value_count, fill = Attrition)) +
-    geom_bar(position = "fill",stat = "identity") + geom_text(aes(label = per_cnt),position = position_fill(vjust = 0.5),size = 2.5) +
-
-    geom_col() + 
-    geom_text(aes(label = per_cnt),position = position_stack(vjust = 0.5),size = 2.5) +
-    coord_flip()+
-
-    facet_wrap(facets = ~variable,scales = "free",ncol = 3) +
-    labs(title = expression(paste(bold("%Attrition by each category"))),
-         y = expression(paste(italic("%Attrition"))))+
+  geom_bar(position = "stack",stat = "identity") + geom_text(aes(label = per_cnt),position = position_stack(vjust = 0.5),size = 2.5) +
+  coord_flip() +
+  facet_wrap(facets = ~variable,scales = "free",ncol = 3) +
+    labs(title = expression(paste(bold("% Attrition by each Nominal category")))) +
     theme(#axis.text.x = element_text(angle = 90,size = 10),
           axis.ticks.x = element_blank(),
-          # axis.text.y = element_blank(),
+          axis.title.y = element_blank(),
           axis.ticks.y = element_blank(),
           axis.title.x = element_blank(),
+          plot.title = element_text(hjust = 0.5),
           legend.position = "bottom",
           panel.grid.major = element_line(colour = "grey80"),
-          panel.border = element_rect(linetype = "dotted",fill =NA)) + 
-  scale_fill_manual(values = c("grey69","maroon")) 
+          panel.border = element_rect(linetype = "dotted",fill = NA)) + 
+  scale_fill_manual(values = c("mediumspringgreen")) 
  
 
 
@@ -573,52 +574,35 @@ melt(data = subset(employee_master_cleaned,
 #---------------------------------------------------
 # PLOTS BY - ORDINAL CATEGORIES
 #---------------------------------------------------
-str(employee_master_cleaned)
 
-# "Education", "StockOptionLevel","work_regularity","workLoad","TrainingTimesLastYear",,
-# "JobLevel","NumCompaniesWorked","EnvironmentSatisfaction",
+# "Education", "StockOptionLevel","work_regularity","workLoad",
+# "JobLevel","EnvironmentSatisfaction",
 # "JobSatisfaction","WorkLifeBalance","JobInvolvement","PerformanceRating",
 
-# Plotting the ordinal categories
-##################ONLY SHOW DATA FOR Yes####################
-melt(data = subset(employee_master_cleaned,
+temp_df2 <- as.data.frame(melt(data = subset(employee_master_cleaned,
                    select = c("Education", "StockOptionLevel","work_regularity","workLoad",
-                              "TrainingTimesLastYear","JobLevel","NumCompaniesWorked",
-                              "EnvironmentSatisfaction","JobSatisfaction","WorkLifeBalance",
-                              "JobInvolvement","PerformanceRating","Attrition")),
-     id.vars = "Attrition") %>% 
-  group_by(variable,value, Attrition) %>% 
-  summarise(value_count = n())  %>%
-  mutate(per_cnt = round(value_count*100/sum(value_count))) %>% 
+                              "JobLevel","EnvironmentSatisfaction","JobSatisfaction","WorkLifeBalance",
+                              "JobInvolvement","PerformanceRating","Attrition")),id.vars = "Attrition") %>% 
+                     group_by(variable,value, Attrition) %>% 
+                     summarise(value_count = n())  %>%
+                     mutate( per_cnt = paste0(round(value_count*100/sum(value_count)),"%")))
+
+ # Plotting the temp_df1 data
+temp_df2 %>% filter(Attrition == "Yes") %>%     # filter "Attrition" for "Yes"
   ggplot(aes(x = factor(reorder(value,-value_count)),y = value_count, fill = Attrition)) +
   geom_bar(position = "fill",stat = "identity") + geom_text(aes(label = per_cnt),position = position_fill(vjust = 0.5),size = 2.5) +
-  facet_wrap(facets = ~variable,scales = "free",ncol = 3) +
-
-  theme(axis.ticks.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_blank(),
-        panel.background = element_blank()) +
-  ylab(label = "Percentage of Attrition 'Yes' and 'No' by each category") +
-  scale_fill_manual(values = c("grey69","hotpink4"))
-  
-
-  labs(title = expression(paste(bold("%Attrition by each category"))),
-       y = expression(paste(italic("%Attrition")))) +
-  theme(
-    axis.ticks.x = element_blank(),
+  facet_wrap(facets = ~variable,scales = "free",ncol = 2) +
+  labs(title = expression(paste(bold("% Attrition by each Ordinal category")))) +
+    theme(axis.ticks.x = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks.y = element_blank(),
     axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    plot.title = element_text(hjust = 0.5),
     # legend.position = "bottom",
     panel.grid.major = element_line(colour = "grey80"),
-    panel.border = element_rect(linetype = "dotted",fill =NA)) + 
-  scale_fill_manual(values = c("grey69","maroon"))
-##################ONLY SHOW DATA FOR Yes####################
-#########################
-# 100% stack bar chart 
-#########################
-
+    panel.border = element_rect(linetype = "dotted",fill = NA)) + 
+  scale_fill_manual(values = c("mediumaquamarine"))
 
 
 #COMMENTS: Performance Rating-4,3, JobInvovlment = 1,2, EnvironmentSatisifaction-1, JobSatisifaction -1, WorkLifeBalance 1-4, 
@@ -634,8 +618,7 @@ library(RColorBrewer)
 #display.brewer.all()
 
 melt(data = subset(employee_master_cleaned,
-                   select = c("DistanceFromHome","Age","Attrition",
-                              "vacations", "mean_attendance")),
+                   select = c("DistanceFromHome","Age","Attrition","vacations", "mean_attendance")),
      id.vars = "Attrition") %>% 
   ggplot(aes(x = value, fill = Attrition)) +
   geom_histogram(binwidth = 2, aes(y = ..density..)) + 
@@ -644,19 +627,18 @@ melt(data = subset(employee_master_cleaned,
   scale_color_brewer(palette = "BrBG",direction = 1) +
   scale_alpha_identity(guide = "none") + 
   facet_wrap(facets = ~variable,scales = "free",ncol = 2) +
-  labs(title = expression(paste(bold("%Attrition by employee related variables"))),
+  labs(title = expression(paste(bold("% Attrition of Interval variables"))),
        y = expression(paste(italic("Density distribution")))) +
   theme(axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
         axis.title.x = element_blank(),
+        plot.title = element_text(hjust = 0.5),
         # panel.background = element_blank(),
         panel.grid.major = element_line(colour = "grey80"),
-        panel.border = element_rect(linetype = "dotted",fill = NA)) +
-  scale_fill_manual(values = c("grey69","navy"))
+        panel.border = element_rect(linetype = "dotted",fill = NA)) 
 
 
 # NOTE: Change the attrtion attribute for Yes in the density plot.
-
 # COMMENTS: Some Strong indicators of Attrition from Density plot
 # Distnace From 0-10 KM, 
 # Age: 25-35 
@@ -1229,9 +1211,11 @@ hr_analyt_gains <- gains(actual = test$Attrition_Yes,predicted = hr_attri_prob_p
       optimal = TRUE)
 print.gains(hr_analyt_gains)
 
+library(ggplot2)
 # Plotting Gain Chart
-ggplot(data.frame(dec = hr_analyt_gains[[1]], cumm_gain = hr_analyt_gains[[6]]),aes(x = dec,cumm_gain)) + 
-  geom_point() + 
+ggplot(data.frame(dec = hr_analyt_gains[[1]], cumm_gain = hr_analyt_gains[[6]]),aes(x = dec,y = cumm_gain)) + 
+  geom_point()
+  #+ geom_smooth(method = "glm",se = FALSE,method.args = list(family = "binomial"))
   # geom_line(linetype = "dotted") + 
   # geom_line(aes(x = dec,y = seq(0.1,1,0.1)),linetype = "dashed") +
   # xlab(label = "decile") + ylab(label = "Cummulative Gain")
