@@ -174,8 +174,8 @@ table(regularity_df)
 quantile(regularity_df$work_cnt,seq(0,1,0.25))
 
 # Plotting histogram of regularity_df to visualize the distribution of data
-cbind(regularity_df,atri = general_data$Attrition) %>% filter(work_cnt > 0) %>%  # non-zero work counts
-  ggplot(aes(work_cnt,fill = atri)) + geom_histogram(binwidth = 2) +
+cbind(regularity_df,attrition = general_data$Attrition) %>% filter(work_cnt > 0) %>%  # non-zero work counts
+  ggplot(aes(work_cnt,fill = attrition)) + geom_histogram(binwidth = 2) +
   labs(title = "Regularity to Work of Employees in one Year") +
   xlab(label = "Daily Work distribution in one Year") +
   theme(axis.title.y = element_blank(),
@@ -208,8 +208,8 @@ table(workload_df)
 quantile(workload_df$work_cnt ,seq(0,1,0.25))
 
 # Plotting the workload
-cbind(workload_df,atri = general_data$Attrition) %>% filter(work_cnt > 0) %>% 
-  ggplot(aes(work_cnt,fill = atri)) + geom_histogram(binwidth = 2) + 
+cbind(workload_df,attrition = general_data$Attrition) %>% filter(work_cnt > 0) %>% 
+  ggplot(aes(work_cnt,fill = attrition)) + geom_histogram(binwidth = 2) + 
   labs(title = "Workload Distribution of Employees in one Year") +
   xlab(label = "Daily Work distribution in one Year") +
   theme(axis.title.y = element_blank(),
@@ -221,7 +221,7 @@ cbind(workload_df,atri = general_data$Attrition) %>% filter(work_cnt > 0) %>%
 # 1-"Heavy",  # count
 # 2-"Severe"  # count
 
-# evaulating the workload count for each employee
+# evaluating the workload count for each employee in terms of number of days when workload is Heavy and Severe
 rowSums(in_out_data_without_stats > 9)
 
 general_data$workLoad <- cut(as.numeric(rowSums(in_out_data_without_stats > 9)), 
@@ -553,7 +553,7 @@ library(ggthemes)
      id.vars = "Attrition") %>% 
   group_by(variable,value, Attrition) %>% 
   summarise(value_count = n())  %>%
-  mutate( per_cnt = paste0(round(value_count*100/sum(value_count)),"%")) )
+  mutate( per_cnt = paste0(round(value_count*100/sum(value_count)),"%")))
 
 # Plotting the temp_df1 data
  temp_df1 %>% #filter(Attrition == "Yes" ) %>% # filter "Attrition" for "Yes"
@@ -781,11 +781,11 @@ library(car)
 vif(hr_model_02)
 
 # VIF of the variables is relatively low. Prioritizing the p-Value over VIF
-# JobInvolvement_2	-0.29301	0.20096	-1.458	p-value= 0.1448 qualify for removal
+# JobInvolvement_2	-0.29301	0.20096	-1.458	p-value= 0.1448 qualify for removal as p-value is high
 
 hr_model_03 <-  glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
     Department_RnD + Department_sales + Education_2 + Education_5 + 
-    EducationField_Mrkt + EducationField_Oth + EducationField_TecDeg + 
+      EducationField_Marketing + EducationField_Other + EducationField_Technical.Degree + 
     JobLevel_4 + JobRole_HumRes + JobRole_LabTech + JobRole_Manf_Dir + 
     JobRole_Res_Dir + JobRole_ResSci + JobRole_SalesExec + MaritalStatus_Married + 
     MaritalStatus_Single + NumCompaniesWorked + StockOptionLevel_1 + 
@@ -798,15 +798,15 @@ hr_model_03 <-  glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     family = "binomial", data = train)
 
 summary(hr_model_03)
-# checking the collinearity of model_03
+# checking the collinearity of hr_model_03
 vif(hr_model_03)
 
-# JobRole_Manf_Dir	p-value:	0.148346		JobRole_Manf_Dir	1.329517777
-# eliminating EducationField.Medical
+# JobRole_Manf_Dir	p-value:0.148346;	VIF-1.329517777
+# eliminating JobRole_Manf_Dir has it has high p-value
 
 hr_model_04 <-  glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
     Department_RnD + Department_sales + Education_2 + Education_5 + 
-    EducationField_Mrkt + EducationField_Oth + EducationField_TecDeg + 
+      EducationField_Marketing + EducationField_Other + EducationField_Technical.Degree + 
     JobLevel_4 + JobRole_HumRes + JobRole_LabTech + 
     JobRole_Res_Dir + JobRole_ResSci + JobRole_SalesExec + MaritalStatus_Married + 
     MaritalStatus_Single + NumCompaniesWorked + StockOptionLevel_1 + 
@@ -820,13 +820,13 @@ hr_model_04 <-  glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
 
 
 summary(hr_model_04)
-# checking the collinearity of model_04
+# checking the collinearity of hr_model_04
 vif(hr_model_04)
 
-# work_regularity_1	p-value =	0.1203850	has very low significance. removing it.
+# work_regularity_1	p-value =	0.1203850; Remove this variable as high p-value and very low significance
 hr_model_05 <-  glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
     Department_RnD + Department_sales + Education_2 + Education_5 + 
-    EducationField_Mrkt + EducationField_Oth + EducationField_TecDeg + 
+      EducationField_Marketing + EducationField_Other + EducationField_Technical.Degree + 
     JobLevel_4 + JobRole_HumRes + JobRole_LabTech + JobRole_Res_Dir + 
     JobRole_ResSci + JobRole_SalesExec + MaritalStatus_Married + 
     MaritalStatus_Single + NumCompaniesWorked + StockOptionLevel_1 + 
@@ -839,14 +839,14 @@ hr_model_05 <-  glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     data = train)
 
 summary(hr_model_05)
-# checking the collinearity of model_05
+# checking the collinearity of hr_model_05
 vif(hr_model_05)
 
-# EducationField_Mrkt	-0.42573	0.26072	-1.633 p-value:	0.1024920 that has low significance p-value
+# EducationField_Marketing	-0.42573	0.26072	-1.633 p-value:	0.1024920;  high p-value & has low significance
 
 hr_model_06 <-  glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
     Department_RnD + Department_sales + Education_2 + Education_5 + 
-    EducationField_Oth + EducationField_TecDeg + 
+      EducationField_Other + EducationField_Technical.Degree + 
     JobLevel_4 + JobRole_HumRes + JobRole_LabTech + JobRole_Res_Dir + 
     JobRole_ResSci + JobRole_SalesExec + MaritalStatus_Married + 
     MaritalStatus_Single + NumCompaniesWorked + StockOptionLevel_1 + 
@@ -858,14 +858,14 @@ hr_model_06 <-  glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     WorkLifeBalance_4, family = "binomial", data = train)
 
 summary(hr_model_06)
-# checking the collinearity of model_03
+# checking the collinearity of hr_model_06
 vif(hr_model_06)
 
-# Eliminating StockOptionLevel_1	p-value:0.1139930 with low value
+# Eliminating StockOptionLevel_1	p-value:0.1139930; high p-value & has low significance
 
 hr_model_07 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
     Department_RnD + Department_sales + Education_2 + Education_5 + 
-    EducationField_Oth + EducationField_TecDeg + JobLevel_4 + 
+      EducationField_Other + EducationField_Technical.Degree + JobLevel_4 + 
     JobRole_HumRes + JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
     JobRole_SalesExec + MaritalStatus_Married + MaritalStatus_Single + 
     NumCompaniesWorked + TotalWorkingYears + 
@@ -878,14 +878,14 @@ hr_model_07 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
 
 
 summary(hr_model_07)
-# checking the collinearity of model_03
+# checking the collinearity of hr_model_07
 vif(hr_model_07)
 
-# Eliminating Education_2	p-value:	0.0957610
+# Eliminating Education_2	p-value:	0.0957610; high p-value
 
 hr_model_08 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
     Department_RnD + Department_sales + Education_5 + 
-    EducationField_Oth + EducationField_TecDeg + JobLevel_4 + 
+      EducationField_Other + EducationField_Technical.Degree  + JobLevel_4 + 
     JobRole_HumRes + JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
     JobRole_SalesExec + MaritalStatus_Married + MaritalStatus_Single + 
     NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
@@ -897,14 +897,14 @@ hr_model_08 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     data = train)
 
 summary(hr_model_08)
-# checking the collinearity of model_08
+# checking the collinearity of hr_model_08
 vif(hr_model_08)
 
-# Eliminating: JobRole_HumRes	p-value:	0.0778510 that has lower insignificant
+# Eliminating: JobRole_HumRes	p-value:	0.0778510; high p-value & has low significance
 
 hr_model_09 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
     Department_RnD + Department_sales + Education_5 + 
-    EducationField_Oth + EducationField_TecDeg + JobLevel_4 + 
+      EducationField_Other + EducationField_Technical.Degree  + JobLevel_4 + 
     JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
     JobRole_SalesExec + MaritalStatus_Married + MaritalStatus_Single + 
     NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
@@ -916,13 +916,13 @@ hr_model_09 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     data = train)
 
 summary(hr_model_09)
-# checking the collinearity of model_09
+# checking the collinearity of hr_model_09
 vif(hr_model_09)
 
-# Eliminating - Education_5 p-value: 0.0562350
+# Eliminating - Education_5 p-value: 0.0562350; p-value is higher & has low significance
 hr_model_10 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
     Department_RnD + Department_sales + 
-    EducationField_Oth + EducationField_TecDeg + JobLevel_4 + 
+      EducationField_Other + EducationField_Technical.Degree  + JobLevel_4 + 
     JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
     JobRole_SalesExec + MaritalStatus_Married + MaritalStatus_Single + 
     NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
@@ -934,13 +934,13 @@ hr_model_10 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     data = train)
 
 summary(hr_model_10)
-# checking the collinearity of model_10
+# checking the collinearity of hr_model_10
 vif(hr_model_10)
 
-# Eliminating - EducationField_Oth(er) p-value: 	0.0553650
+# Eliminating -  EducationField_Other p-value: 	0.0553650; p-value is higher & has low significance
 hr_model_11 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
     Department_RnD + Department_sales + 
-    EducationField_TecDeg + JobLevel_4 + 
+      EducationField_Technical.Degree + JobLevel_4 + 
     JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
     JobRole_SalesExec + MaritalStatus_Married + MaritalStatus_Single + 
     NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear + 
@@ -952,11 +952,11 @@ hr_model_11 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     data = train)
 
 summary(hr_model_11)
-# checking the collinearity of model_11
+# checking the collinearity of hr_model_11
 vif(hr_model_11)
 
 
-# Eliminating - EducationField_TecDeg	p-value:	0.0478790	that has lower p-value
+# Eliminating - EducationField_Technical.Degree as its	p-value:0.047879 is higher than JobLevel_4 p-value is 0.034469 for same level of significance
 hr_model_12 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
     Department_RnD + Department_sales + 
     JobLevel_4 + 
@@ -971,10 +971,10 @@ hr_model_12 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     data = train)
 
 summary(hr_model_12)
-# checking the collinearity of model_12
+# checking the collinearity of hr_model_12
 vif(hr_model_12)
 
-## Eliminating - JobLevel_4	p-value:	0.0309330	that has lower p-value
+# Eliminating - JobLevel_4	p-value:	0.0309330	that has higher p-value in compared to other variables with same level of significance 
 hr_model_13 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
     Department_RnD + Department_sales + 
     JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
@@ -988,12 +988,12 @@ hr_model_13 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     data = train)
 
 summary(hr_model_13)
-# checking the collinearity of model_13
+# checking the collinearity of hr_model_13
 vif(hr_model_13)
 
 
 # MaritalStatus_Married	0.47635	0.20376	2.338	0.0193980	*	MaritalStatus_Married	2.416876822
-# Eliminating - MaritalStatus_Married		p-value:	0.0193980	that has lower p-value
+# Eliminating - MaritalStatus_Married as it has lower significance
 hr_model_14 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
     Department_RnD + Department_sales + 
     JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
@@ -1007,10 +1007,10 @@ hr_model_14 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     data = train)
 
 summary(hr_model_14)
-# checking the collinearity of model_14
+# checking the collinearity of hr_model_14
 vif(hr_model_14)
 
-## Eliminating - TrainingTimesLastYear	-0.12822	0.05406	-2.372	p-value:	0.0177010	that has lower p-value
+## Eliminating - TrainingTimesLastYear	-0.12822	0.05406	-2.372	p-value:	0.0177010; but has lower significance
 hr_model_15 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
     Department_RnD + Department_sales + 
     JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
@@ -1024,13 +1024,13 @@ hr_model_15 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     data = train)
 
 summary(hr_model_15)
-# checking the collinearity of model_15
+# checking the collinearity of hr_model_15
 vif(hr_model_15)
 
 
 # MODELS FROM HERE ARE FOR VERIFICATION-- verifying the models
 
-## Eliminating - 	JobSatisfaction_2	p-value: 0.0095090 	that has lower p-value
+## Eliminating - 	JobSatisfaction_2	p-value: 0.0095090; as it has lower significance
 hr_model_16 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
     Department_RnD + Department_sales + 
     JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
@@ -1044,10 +1044,10 @@ hr_model_16 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     data = train)
 
 summary(hr_model_16)
-# checking the collinearity of model_16
+# checking the collinearity of hr_model_16
 vif(hr_model_16)
 
-## Eliminating - 	JobSatisfaction_3	p-value: 0.0095090 	that has lower p-value
+## Eliminating - 	JobSatisfaction_3	p-value: 0.112011; High p-value and lowest significance
 hr_model_17 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
     Department_RnD + Department_sales + 
     JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
@@ -1061,10 +1061,10 @@ hr_model_17 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     data = train)
 
 summary(hr_model_17)
-# checking the collinearity of model_17
+# checking the collinearity of hr_model_17
 vif(hr_model_17)
 
-## Eliminating - 	mean_attendance	0.35537	0.1303	2.727	0.0063860	**		4.730408944 lower p-value
+## Eliminating - 	mean_attendance	0.35537	0.1303	2.727	P-value 0.0063860	**		VIF:4.730408944 has higher VIF
 hr_model_18 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
                      Department_RnD + Department_sales + 
                      JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci + 
@@ -1078,10 +1078,10 @@ hr_model_18 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
                    data = train)
 
 summary(hr_model_18)
-# checking the collinearity of model_18
+# checking the collinearity of hr_model_18
 vif(hr_model_18)
 
-## Eliminating - 	 JobRole_LabTech	that has lower p-value
+## Eliminating - 	 JobRole_LabTech as it has lower level of significance
 hr_model_19 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently + 
                      Department_RnD + Department_sales + 
                      JobRole_Res_Dir + JobRole_ResSci + 
@@ -1095,8 +1095,10 @@ hr_model_19 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
                    data = train)
 
 summary(hr_model_19)
-# checking the collinearity of model_19
+# checking the collinearity of hr_model_19
 vif(hr_model_19)
+
+
 
 
 # the AIC of the model changes significantly when the number GRADUALLY from model 11, further AIC increases from Model 15.
@@ -1276,11 +1278,11 @@ summary(hr_model_15)
                              JobInvolvement_3 + EnvironmentSatisfaction_2 + EnvironmentSatisfaction_3 + 
                              EnvironmentSatisfaction_4 + JobSatisfaction_2 + JobSatisfaction_3 + 
                              JobSatisfaction_4 + WorkLifeBalance_2 + WorkLifeBalance_3 + 
-                             WorkLifeBalance_4 ,data = train,family = "binomial",method = "glmStepAIC",                 trControl = crossValsettings)
+                             WorkLifeBalance_4 ,data = train,family = "binomial",method = "glmStepAIC", trControl = crossValsettings)
  hr_anal_crossVal
 
 # using gains package
-# install.packages("gains")
+ install.packages("gains")
 library(gains)
 
 length(test$Attrition_Yes)
