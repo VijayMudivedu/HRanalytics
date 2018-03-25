@@ -24,25 +24,6 @@
 # You are required to model the probability of attrition using a logistic regression. The results thus obtained will be used by the management to understand what changes they should make to their workplace, in order to get most of their employees to stay.
 #
 
-# ************Results Expected ************
-
-# Write all your code in one well-commented R file; briefly, mention the insights and observations from the analysis
-# Present the overall approach of the analysis in a presentation
-# Mention the problem statement and the analysis approach briefly
-# Explain the results in business terms
-# Include visualisations and summarise the most important results in the presentation
-
-# ************ You need to submit the following two components ************:
-
-# R commented file: Should include detailed comments and should not contain unnecessary pieces of code
-# Presentation:  Make a presentation to present your analysis to the chief data scientist of your company (and thus you should include both technical and business aspects). The presentation should be concise, clear, and to the point. Submit the presentation after converting it into PDF format.
-# Downloads
-# All the files required for this case study are given in the following zip file.
-#
-# ************Important Note:************
-# You are supposed to code entirely in R. All your plots and tables must be created in R, though you may recreate the same in Tableau as well (for the presentation) for better aesthetics. Please submit the presentation in a PDF format. Please make sure to rename your R script as "Group_Facilitator_RollNo_main.R".
-
-
 library(lubridate)
 library(MASS)
 library(tidyverse)
@@ -407,6 +388,10 @@ ggplot(data.frame(IV_TotalWorkingYears$Tables["TotalWorkingYears"]),
 ggsave("plots/IV by Total Work-Ex.png",
        plot=last_plot(), units = "mm", width = 500, height = 400, dpi = 600)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2098c134dd61bd5a8a0adda9cd2fff6196d0b485
 #
 # # reording the plot
 # ggplot(data.frame(IV_TotalWorkingYears$Tables["TotalWorkingYears"]),
