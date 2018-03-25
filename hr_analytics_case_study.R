@@ -906,7 +906,7 @@ vif(hr_model_04)
 # work_regularity_1	p-value =	0.1203850; Remove this variable as high p-value and very low significance
 hr_model_05 <-  glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     Department_RnD + Department_sales + Education_2 + Education_5 +
-    EducationField_Mrkt + EducationField_Oth + EducationField_TecDeg +
+    EducationField_Marketing + EducationField_Other + EducationField_Technical.Degree +
     JobLevel_4 + JobRole_HumRes + JobRole_LabTech + JobRole_Res_Dir +
     JobRole_ResSci + JobRole_SalesExec + MaritalStatus_Married +
     MaritalStatus_Single + NumCompaniesWorked + StockOptionLevel_1 +
@@ -926,7 +926,7 @@ vif(hr_model_05)
 
 hr_model_06 <-  glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     Department_RnD + Department_sales + Education_2 + Education_5 +
-    EducationField_Oth + EducationField_TecDeg +
+    EducationField_Other + EducationField_Technical.Degree +
     JobLevel_4 + JobRole_HumRes + JobRole_LabTech + JobRole_Res_Dir +
     JobRole_ResSci + JobRole_SalesExec + MaritalStatus_Married +
     MaritalStatus_Single + NumCompaniesWorked + StockOptionLevel_1 +
@@ -945,7 +945,7 @@ vif(hr_model_06)
 
 hr_model_07 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     Department_RnD + Department_sales + Education_2 + Education_5 +
-    EducationField_Oth + EducationField_TecDeg + JobLevel_4 +
+    EducationField_Other + EducationField_Technical.Degree + JobLevel_4 +
     JobRole_HumRes + JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci +
     JobRole_SalesExec + MaritalStatus_Married + MaritalStatus_Single +
     NumCompaniesWorked + TotalWorkingYears +
@@ -965,7 +965,7 @@ vif(hr_model_07)
 
 hr_model_08 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     Department_RnD + Department_sales + Education_5 +
-    EducationField_Oth + EducationField_TecDeg + JobLevel_4 +
+   EducationField_Other + EducationField_Technical.Degree + JobLevel_4 +
     JobRole_HumRes + JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci +
     JobRole_SalesExec + MaritalStatus_Married + MaritalStatus_Single +
     NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear +
@@ -984,7 +984,7 @@ vif(hr_model_08)
 
 hr_model_09 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     Department_RnD + Department_sales + Education_5 +
-    EducationField_Oth + EducationField_TecDeg + JobLevel_4 +
+    EducationField_Other + EducationField_Technical.Degree + JobLevel_4 +
     JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci +
     JobRole_SalesExec + MaritalStatus_Married + MaritalStatus_Single +
     NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear +
@@ -1002,7 +1002,7 @@ vif(hr_model_09)
 # Eliminating - Education_5 p-value: 0.0562350; p-value is higher & has low significance
 hr_model_10 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     Department_RnD + Department_sales +
-    EducationField_Oth + EducationField_TecDeg + JobLevel_4 +
+    EducationField_Other + EducationField_Technical.Degree + JobLevel_4 +
     JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci +
     JobRole_SalesExec + MaritalStatus_Married + MaritalStatus_Single +
     NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear +
@@ -1020,7 +1020,7 @@ vif(hr_model_10)
 # Eliminating -  EducationField_Other p-value: 	0.0553650; p-value is higher & has low significance
 hr_model_11 <- glm(formula = Attrition_Yes ~ Age + BusinessTravel_frequently +
     Department_RnD + Department_sales +
-    EducationField_TecDeg + JobLevel_4 +
+    EducationField_Technical.Degree + JobLevel_4 +
     JobRole_LabTech + JobRole_Res_Dir + JobRole_ResSci +
     JobRole_SalesExec + MaritalStatus_Married + MaritalStatus_Single +
     NumCompaniesWorked + TotalWorkingYears + TrainingTimesLastYear +
