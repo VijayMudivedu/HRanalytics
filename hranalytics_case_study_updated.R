@@ -1234,10 +1234,18 @@ ggplot(output_matrix) +
   geom_line(aes(x = s,y = output_matrix$sensitivity,col = "black")) + 
   geom_line(aes(x = s,y = output_matrix$specificity,col = "blue")) +
   geom_line(aes(x = s,y = output_matrix$accuracy,col = "green")) +
-  geom_line(aes(x = s,y = abs(output_matrix$sensitivity + output_matrix$specificity + output_matrix$accuracy))) +
   scale_color_discrete(labels = c("Sensitivity","Specificity","Accuracy")) +
-  geom_vline(xintercept = c(cut_off,cutoff_max),linetype = "dotted") + 
-  xlab(label = "Predicted Probability") + ylab(label = "Sensitiviy, Specificity, and Accuracy")
+  geom_vline(xintercept = c(cut_off,cutoff_max),linetype = "dotted") +
+  xlab(label = "Predicted Probability") + labs(title = "Sensitiviy, Specificity, and Accuracy") + 
+  theme(legend.position = "bottom",
+        axis.title.y = element_blank(),
+        plot.title = element_text(hjust = 0.5))
+
+# COMMENTS: CutOff at 0.157144, Specificity, sensitivity and Accuracy become optimum. 
+# Attrition of True Positive or True Negative is 73.3% accurately Predicted by the model.
+# Model predicts “Yes” Value 72.9% of times among available “Yes”
+# Also, model predicts “Nos” in 73.43% times of all Nos.
+
 
 # CHARACTERISITCS OF THE MODEL AT CUTOFF
 
@@ -1378,38 +1386,24 @@ hr_model_15$coefficients
 # Further, employees with worklife balance, and poor Job Satisifaction, poor values of Environment Satisfaction and and lower Job_involvment_3 have Higher attrition. Thus there variables have a inverse relationship with attrition. 
 
 
+hr_model_15$coefficients
 
-
-
-# Estimate Std. Error z value Pr(>|z|)    
-# (Intercept)                1.36043    0.42084   3.233 0.001226 ** 
-#   Age                       -0.34866    0.08457  -4.123 3.74e-05 ***
-#   BusinessTravel_frequently  1.18531    0.15421   7.686 1.51e-14 ***
-#   Department_RnD            -0.95381    0.24731  -3.857 0.000115 ***
-#   Department_sales          -1.18250    0.26280  -4.500 6.81e-06 ***
-#   JobRole_LabTech            0.59104    0.19715   2.998 0.002718 ** 
-#   JobRole_Res_Dir            0.95876    0.26850   3.571 0.000356 ***
-#   JobRole_ResSci             0.52077    0.18336   2.840 0.004509 ** 
-#   JobRole_SalesExec          0.69980    0.18296   3.825 0.000131 ***
-#   MaritalStatus_Single       1.11942    0.13363   8.377  < 2e-16 ***
-#   NumCompaniesWorked         0.15493    0.03191   4.855 1.20e-06 ***
-#   TotalWorkingYears         -0.10775    0.01928  -5.588 2.30e-08 ***
-#   YearsSinceLastPromotion    0.18840    0.03685   5.113 3.18e-07 ***
-#   YearsWithCurrManager      -0.14866    0.03166  -4.695 2.66e-06 ***
-#   mean_attendance            0.35007    0.13083   2.676 0.007457 ** 
-#   workLoad_1                 1.99152    0.38526   5.169 2.35e-07 ***
-#   workLoad_2                 0.88964    0.30087   2.957 0.003108 ** 
-#   JobInvolvement_3          -0.42609    0.13202  -3.228 0.001248 ** 
-#   EnvironmentSatisfaction_2 -0.82865    0.20145  -4.113 3.90e-05 ***
-#   EnvironmentSatisfaction_3 -0.86674    0.17862  -4.852 1.22e-06 ***
-#   EnvironmentSatisfaction_4 -1.33682    0.18650  -7.168 7.60e-13 ***
-#   JobSatisfaction_2         -0.50989    0.19663  -2.593 0.009509 ** 
-#   JobSatisfaction_3         -0.48539    0.17576  -2.762 0.005751 ** 
-#   JobSatisfaction_4         -1.42997    0.19570  -7.307 2.73e-13 ***
-#   WorkLifeBalance_2         -1.16166    0.26738  -4.345 1.40e-05 ***
-#   WorkLifeBalance_3         -1.48839    0.25069  -5.937 2.90e-09 ***
-#   WorkLifeBalance_4         -1.16511    0.30122  -3.868 0.000110 ***
-#   ---
+# (Intercept) BusinessTravel_frequently     BusinessTravel_rarely            Department_RnD 
+# 1.30958924                1.73350072                0.72003369               -0.85443292 
+# Department_sales               Education_2     EducationField_TecDeg          JobRole_Manf_Dir 
+# -0.90665466                0.37963418               -0.64045692               -0.58946271 
+# MaritalStatus_Single      NumCompaniesWorked_1      NumCompaniesWorked_4      NumCompaniesWorked_5 
+# 1.12554094                0.67197541                0.50493153                1.59311697 
+# NumCompaniesWorked_6      NumCompaniesWorked_7      NumCompaniesWorked_9         TotalWorkingYears 
+# 1.01307484                1.35627592                1.21030413               -0.09315777 
+# TrainingTimesLastYear_6            YearsAtCompany   YearsSinceLastPromotion         work_regularity_1 
+# -1.44892442               -0.17362626                0.21185628               -0.47176202 
+# work_regularity_2                workLoad_1                workLoad_2 EnvironmentSatisfaction_2 
+# -0.48983018                2.18987785                1.19485107               -0.95186460 
+# EnvironmentSatisfaction_3 EnvironmentSatisfaction_4         JobSatisfaction_2         JobSatisfaction_3 
+# -1.01744174               -1.41622118               -0.60313882               -0.49179014 
+# JobSatisfaction_4         WorkLifeBalance_2         WorkLifeBalance_3         WorkLifeBalance_4 
+# -1.12749439               -1.24590545               -1.59950712               -1.15293437 
 
 
 
